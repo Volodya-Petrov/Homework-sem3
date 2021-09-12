@@ -1,11 +1,13 @@
 using System;
+using System.Threading;
 using System.IO;
 
 namespace WorkWithMatrix
 {
+
     public static class ParallelMatrixMultiplication
     {   
-        
+               
         private static void CheckForMatrix(int[][] matrix)
         {
             var length = matrix[0].Length;
@@ -41,6 +43,19 @@ namespace WorkWithMatrix
             return matrix;
         }
 
+        private static void WriteMatrixIntoFile(string filePath, int[][] matrix)
+        {
+            using var file = new StreamWriter(filePath, false);
+            for (int i = 0; i < matrix.Length; i++)
+            {
+                for (int j = 0; j < matrix[i].Length; j++)
+                {
+                    file.Write(j != matrix[i].Length - 1 ? $"{matrix[i][j]} " : $"{matrix[i][j]}\n");
+                }
+            }
+            file.Close();
+        }
+        
         private static void CheckForAbilityToMultiplyMatrices(int[][] firstMatrix, int[][] secondMatrix)
         {
             if (firstMatrix[0].Length != secondMatrix.Length)
@@ -60,6 +75,34 @@ namespace WorkWithMatrix
             {
                 newMatrix[i] = MultiplyRowOnMatrix(firstMatrix[i], secondMatrix);
             }
+            WriteMatrixIntoFile(destinationPath, newMatrix);
+        }
+        
+        public static void MultiplyMatricesParallel(string firstMatrixPath, string secondMatrixPath,
+            string destinationPath)
+
+        {
+            var firstMatrix = ParseMatrixFromFile(firstMatrixPath);
+            var secondMatrix = ParseMatrixFromFile(secondMatrixPath);
+            CheckForAbilityToMultiplyMatrices(firstMatrix, secondMatrix);
+            var newMatrix = new int[firstMatrix.Length][];
+            var threads = new Thread[firstMatrix.Length];
+            for (int i = 0; i < firstMatrix.Length; i++)
+            {
+                var index = i;
+                threads[i] = new Thread(() => { newMatrix[index] = MultiplyRowOnMatrix(firstMatrix[index], secondMatrix); });
+            }
+
+            foreach (var thread in threads)
+            {
+                thread.Start();
+            }
+
+            foreach (var thread in threads)
+            {
+                thread.Join();
+            }
+            WriteMatrixIntoFile(destinationPath, newMatrix);
         }
 
         private static int[] MultiplyRowOnMatrix(int[] row, int[][] matrix)
@@ -68,7 +111,7 @@ namespace WorkWithMatrix
             for (int i = 0; i < matrix[0].Length; i++)
             {
                 var sum = 0;
-                for (int j = 0; j < matrix.Length; i++)
+                for (int j = 0; j < matrix.Length; j++)
                 {
                     sum += row[j] * matrix[j][i];
                 }
