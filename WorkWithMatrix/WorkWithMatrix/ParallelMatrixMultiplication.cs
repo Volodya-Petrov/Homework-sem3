@@ -20,7 +20,7 @@ namespace WorkWithMatrix
             }
         }
         
-        public static int[][] ParseMatrixFromFile(string matrixPath)
+        private static int[][] ParseMatrixFromFile(string matrixPath)
         {
             var matrixInfoFromFile = File.ReadAllLines(matrixPath);
             var splitMatrix = new string[matrixInfoFromFile.Length][];
@@ -33,7 +33,7 @@ namespace WorkWithMatrix
             for (int i = 0; i < splitMatrix.Length; i++)
             {
                 matrix[i] = new int[splitMatrix[i].Length];
-                for (int j = 0; j < splitMatrix[0].Length; j++)
+                for (int j = 0; j < splitMatrix[i].Length; j++)
                 {
                     int.TryParse(splitMatrix[i][j], out matrix[i][j]);
                 }
