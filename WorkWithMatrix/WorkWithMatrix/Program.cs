@@ -8,7 +8,11 @@ namespace WorkWithMatrix
     {
         static void Main(string[] args)
         {
-            Statistic.GetStatisticOfMatrices100X100And10Experiments();
+            var firstMatrix = FilesWorkingWithMatrix.ReadMatrixFromFile(args[0]);
+            var secondMatrix = FilesWorkingWithMatrix.ReadMatrixFromFile(args[1]);
+            var resultMatrixWithParralel =
+                ParallelMatrixMultiplication.MultiplyMatricesParallel(firstMatrix, secondMatrix);
+            FilesWorkingWithMatrix.WriteMatrixIntoFile(args[2], resultMatrixWithParralel);
         }
     }
 }
