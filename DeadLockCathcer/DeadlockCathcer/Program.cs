@@ -27,7 +27,6 @@ namespace DeadlockCathcer
                     philosopher.Live(random, forks[index], forks[(index + 1) % countOfPhilosophers]);
                 });
                 threads[i].Start();
-                Семен лох
             }
         }
     }
