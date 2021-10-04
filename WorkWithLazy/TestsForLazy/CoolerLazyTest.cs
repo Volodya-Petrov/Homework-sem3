@@ -51,6 +51,6 @@ namespace TestsForLazy
 
         [Test]
         public void CoolerLazyShouldThrowExceptionWhenNullFunctionWasSent()
-            => Assert.Throws<ArgumentException>(() => LazyFactory<int>.CreateCoolerLazy(null));
+            => Assert.Throws<ArgumentNullException>(() => LazyFactory<int>.CreateCoolerLazy(null));
     }
 }

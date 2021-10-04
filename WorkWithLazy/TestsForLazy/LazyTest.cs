@@ -32,6 +32,6 @@ namespace TestsForLazy
 
         [Test]
         public void TestLazyShouldThrowArgumentExceptionWhenNullFunctionWasSent()
-            => Assert.Throws<ArgumentException>(() => LazyFactory<int>.CreateLazy(null));
+            => Assert.Throws<ArgumentNullException>(() => LazyFactory<int>.CreateLazy(null));
     }
 }

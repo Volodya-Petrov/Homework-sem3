@@ -5,7 +5,6 @@ namespace WorkWithLazy
     /// <summary>
     /// Класс для создания Lazy объектов
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     public static class LazyFactory<T>
     {   
         /// <summary>

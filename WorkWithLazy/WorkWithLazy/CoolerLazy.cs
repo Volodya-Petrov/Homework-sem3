@@ -3,32 +3,28 @@ using System;
 namespace WorkWithLazy
 {   
     /// <summary>
-    /// Класс вычисляет значение переданной функции, работает с мультипотоком
+    /// Класс вычисляет значение переданной функции, работает с многопоточностью
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     public class CoolerLazy<T> : ILazy<T>
-    {
-        public CoolerLazy(Func<T> supplier)
-        {
-            if (supplier == null)
-            {
-                throw new ArgumentException();
-            }
-            _supplier = supplier;
-        }
-            
+    {   
         private T _result;
 
         private volatile bool _calculated;
         
-        private readonly Func<T> _supplier;
+        private Func<T> _supplier;
 
-        private object locker = new object();
+        private object locker = new();
         
-        /// <summary>
-        /// метод вычисляющий значения переданной функции
-        /// </summary>
-        /// <returns></returns>
+        public CoolerLazy(Func<T> supplier)
+        {
+            if (supplier == null)
+            {
+                throw new ArgumentNullException();
+            }
+            _supplier = supplier;
+        }
+        
+        /// <inheritdoc />
         public T Get()
         {
             if (_calculated)
@@ -42,6 +38,7 @@ namespace WorkWithLazy
                     return _result;
                 }
                 _result = _supplier();
+                _supplier = null;
                 _calculated = true;
                 return _result;   
             }
