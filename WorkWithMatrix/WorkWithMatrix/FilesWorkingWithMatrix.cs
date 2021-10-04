@@ -59,7 +59,6 @@ namespace WorkWithMatrix
                     file.Write(j != matrix[i].Length - 1 ? $"{matrix[i][j]} " : $"{matrix[i][j]}\n");
                 }
             }
-            file.Close();
         }
     }
 }

@@ -9,7 +9,7 @@ namespace WorkWithMatrix.test
     {
 
         [TestCaseSource(nameof(FunctionsForTest))]
-        public void TestForCalculationSquareMatrices(Func<int[][], int[][], int[][]> multiplyMatrices)
+        public void TestForCalculationSquareMatricesWithFilesWorking(Func<int[][], int[][], int[][]> multiplyMatrices)
         {
             var path1 = "../../../test1/matrix1.txt";
             var path2 = "../../../test1/matrix2.txt";
@@ -25,28 +25,36 @@ namespace WorkWithMatrix.test
         [TestCaseSource(nameof(FunctionsForTest))]
         public void TestForCalculationNotSquareMatrices(Func<int[][], int[][], int[][]> multiplyMatrices)
         {
-            var path1 = "../../../test2/matrix1.txt";
-            var path2 = "../../../test2/matrix2.txt";
-            var path3 = "../../../test2/matrix3.txt";
-            var firstMatrix = FilesWorkingWithMatrix.ReadMatrixFromFile(path1);
-            var secondMatrix = FilesWorkingWithMatrix.ReadMatrixFromFile(path2);
+            var firstMatrix = new int[][]
+            {
+                new[] {1, 2, 3, 4},
+                new[] {5, 6, 7, 8},
+                new[] {9, 10, 11, 12}
+            };
+            var secondMatrix = new int[][]
+            {
+                new[] {1, 2, 3},
+                new[] {4, 5, 6},
+                new[] {7, 8, 9},
+                new[] {10, 11, 12}
+            };
             var resultMatrix = multiplyMatrices(firstMatrix, secondMatrix);
-            FilesWorkingWithMatrix.WriteMatrixIntoFile(path3, resultMatrix);
-            var expected = "70 80 90\n158 184 210\n246 288 330\n";
-            Assert.AreEqual(expected, File.ReadAllText(path3));
+            var expected = new int[][]
+            {
+                new[] {70, 80, 90},
+                new[] {158, 184, 210},
+                new[] {246, 288, 330}
+            };
+            Assert.AreEqual(expected, resultMatrix);
         }
 
         [TestCaseSource(nameof(FunctionsForTest))]
-        public void TestWithIncorrectMatrixShouldThrowException(Func<int[][], int[][], int[][]> multiplyMatrices)
+        public void TestReadIncorrectMatrixShouldThrowException(Func<int[][], int[][], int[][]> multiplyMatrices)
         {
             Assert.Throws<ArgumentException>(() =>
             {
                 var path1 = "../../../test3/matrix1.txt";
-                var path2 = "../../../test3/matrix2.txt";
-                var path3 = "../../../test3/matrix3.txt";
                 var firstMatrix = FilesWorkingWithMatrix.ReadMatrixFromFile(path1);
-                var secondMatrix = FilesWorkingWithMatrix.ReadMatrixFromFile(path2);
-                var resultMatrix = multiplyMatrices(firstMatrix, secondMatrix);
             });
         }
         
@@ -55,11 +63,17 @@ namespace WorkWithMatrix.test
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                var path1 = "../../../test4/matrix1.txt";
-                var path2 = "../../../test4/matrix2.txt";
-                var path3 = "../../../test4/matrix3.txt";
-                var firstMatrix = FilesWorkingWithMatrix.ReadMatrixFromFile(path1);
-                var secondMatrix = FilesWorkingWithMatrix.ReadMatrixFromFile(path2);
+                var firstMatrix = new int[][]
+                {
+                    new[] {1, 2, 3},
+                    new[] {4, 5, 6},
+                    new[] {7, 8, 9}
+                };
+                var secondMatrix = new int[][]
+                {
+                    new[] {1, 2, 3},
+                    new[] {1, 2, 3}
+                };
                 var resultMatrix = multiplyMatrices(firstMatrix, secondMatrix);
             });
         }
