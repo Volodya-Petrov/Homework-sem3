@@ -36,7 +36,7 @@ namespace WorkWithMatrix
         /// </summary>
         /// <param name="rows">кол-во строк в сгенерированных матрицах</param>
         /// <param name="columns">кол-во столбцов в сгенерированных матрицах</param>
-        /// <param name="countOfExperiments"></param>
+        /// <param name="countOfExperiments">кол-во экспериментов для подсчета статистики</param>
         public static void CalculateAndPrintAverageAndStandardDeviationOfMultiplicationMatrices(int rows, int columns, int countOfExperiments)
         {
             (var parallelResults, var notParallelResults) = GenerateAndGetTimeResultsOfExperiments(rows, columns, countOfExperiments);
