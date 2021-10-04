@@ -38,7 +38,7 @@ namespace WorkWithMatrix
         {
             CheckForAbilityToMultiplyMatrices(firstMatrix, secondMatrix);
             var newMatrix = new int[firstMatrix.Length][];
-            var threads = new Thread[Environment.ProcessorCount];
+            var threads = new Thread[Math.Min(Environment.ProcessorCount, firstMatrix.Length)];
             var chunkSize = newMatrix.Length / threads.Length + 1;
             for (int i = 0; i < threads.Length; i++)
             {
