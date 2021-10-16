@@ -8,11 +8,11 @@ namespace WorkWithThreadPool
 
         private bool _isCompleted;
         
-        private Func<T> _task;
+        private Func<T> task;
         
         public MyTask(Func<T> task)
         {
-            _task = task;
+            this.task = task;
         }
         
         public T Result
@@ -28,7 +28,7 @@ namespace WorkWithThreadPool
 
         public void Run()
         {
-            _result = _task();
+            _result = task();
             _isCompleted = true;
         }
     }
