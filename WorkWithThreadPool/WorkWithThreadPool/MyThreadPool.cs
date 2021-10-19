@@ -4,7 +4,10 @@ using System.Linq;
 using System.Threading;
 
 namespace WorkWithThreadPool
-{
+{   
+    /// <summary>
+    /// класс для параллельных исполнений задач
+    /// </summary>
     public class MyThreadPool
     {
         private ConcurrentQueue<Action> tasks;
@@ -24,18 +27,24 @@ namespace WorkWithThreadPool
                 threads[i].Start();
             }
         }
-
+        
+        /// <summary>
+        /// добавляет задачу в очередь на исполнение
+        /// </summary>
         public MyTask<T> Submit<T>(Func<T> task)
         {
             if (_cancellationToken.Token.IsCancellationRequested)
             {
                 throw new ThreadInterruptedException();
             }
-            var myTask = new MyTask<T>(task, this);
+            var myTask = new MyTask<T>(task, this, _cancellationToken.Token);
             tasks.Enqueue(myTask.Run);
             return myTask;
         }
-
+        
+        /// <summary>
+        /// заканчивает работу MyThreadPool
+        /// </summary>
         public void Shutdown()
         {
             _cancellationToken.Cancel();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace WorkWithThreadPool
 {
@@ -15,8 +16,11 @@ namespace WorkWithThreadPool
 
         private ConcurrentQueue<Action> _continueTasks;
         
-        public MyTask(Func<T> task, MyThreadPool pool)
+        private CancellationToken _cancellationToken;
+        
+        public MyTask(Func<T> task, MyThreadPool pool, CancellationToken token)
         {
+            _cancellationToken = token;
             this.task = task;
             _threadPool = pool;
             _continueTasks = new ConcurrentQueue<Action>();
@@ -32,7 +36,10 @@ namespace WorkWithThreadPool
         }
 
         public bool IsCompleted { get => _isCompleted; }
-
+        
+        /// <summary>
+        /// функция вычисления результата задачи
+        /// </summary>
         public void Run()
         {
             _result = task();
@@ -46,13 +53,17 @@ namespace WorkWithThreadPool
             }
         }
 
-        public MyTask<TResult> ContinueWith<TResult>(Func<T, TResult> continueTask)
+        public IMyTask<TResult> ContinueWith<TResult>(Func<T, TResult> continueTask)
         {
+            if (_cancellationToken.IsCancellationRequested)
+            {
+                throw new ThreadInterruptedException();
+            }
             if (_isCompleted)
             {
                 return _threadPool.Submit(() => continueTask(_result));
             }
-            var newContinueTask = new MyTask<TResult>(() => continueTask(_result), _threadPool);
+            var newContinueTask = new MyTask<TResult>(() => continueTask(_result), _threadPool, _cancellationToken);
             _continueTasks.Enqueue(newContinueTask.Run);
             return newContinueTask;
         }
