@@ -1,5 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="b54d94d9-9f1d-45f5-9a8e-17baf8510507" name="Default Changelist" comment="- added shutdown threads">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.WorkWithThreadPool/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.WorkWithThreadPool/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.WorkWithThreadPool/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.WorkWithThreadPool/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WorkWithThreadPool/MyTask.cs" beforeDir="false" afterPath="$PROJECT_DIR$/WorkWithThreadPool/MyTask.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WorkWithThreadPool/MyThreadPool.cs" beforeDir="false" afterPath="$PROJECT_DIR$/WorkWithThreadPool/MyThreadPool.cs" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2E9BEEB1-8083-4F4B-9ABE-A5F3DB1BC8BD/1B2/ExecutionContext.cs" root0="SKIP_HIGHLIGHTING" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <changedPaths>
+      <option value="$PROJECT_DIR$/WorkWithThreadPool/Program.cs" />
+      <option value="$PROJECT_DIR$/WorkWithThreadPool/MyThreadPool.cs" />
+      <option value="$PROJECT_DIR$/WorkWithThreadPool/MyTask.cs" />
+    </changedPaths>
+  </component>
+  <component name="ProjectId" id="1zaioT4yJlBEFAJXsk0U2k7Slvg" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="DebuggerViewTab_PTCS_FirstProportionKey" value="0.1840796" />
+    <property name="DebuggerViewTab_PTCS_LastProportionKey" value="0.0" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="XThreadsFramesViewSplitterKey" value="0.9230769" />
+    <property name="vue.rearranger.settings.migration" value="true" />
+  </component>
   <component name="RunManager">
     <configuration name="WorkWithThreadPool" type="DotNetProject" factoryName=".NET Project">
       <option name="EXE_PATH" value="" />
@@ -19,5 +59,79 @@
         <option name="Build" />
       </method>
     </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b54d94d9-9f1d-45f5-9a8e-17baf8510507" name="Default Changelist" comment="" />
+      <created>1634392778344</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1634392778344</updated>
+      <workItem from="1634392790355" duration="4841000" />
+      <workItem from="1634665733878" duration="5538000" />
+    </task>
+    <task id="LOCAL-00001" summary="- added shutdown threads">
+      <created>1634406854425</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1634406854425</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
+  <component name="UnityUnitTestConfiguration" currentTestLauncher="NUnit" />
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="- added shutdown threads" />
+    <option name="LAST_COMMIT_MESSAGE" value="- added shutdown threads" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$PROJECT_DIR$/WorkWithThreadPool/Program.cs</url>
+          <line>27</line>
+          <properties documentPath="C:\Users\Привет\source\repos\Homework-sem3\WorkWithThreadPool\WorkWithThreadPool\Program.cs" initialLine="22" containingFunctionPresentation="method 'Main'">
+            <startOffsets>
+              <option value="725" />
+            </startOffsets>
+            <endOffsets>
+              <option value="726" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$PROJECT_DIR$/WorkWithThreadPool/Program.cs</url>
+          <line>26</line>
+          <properties documentPath="C:\Users\Привет\source\repos\Homework-sem3\WorkWithThreadPool\WorkWithThreadPool\Program.cs" initialLine="21" containingFunctionPresentation="method 'Main'">
+            <startOffsets>
+              <option value="697" />
+            </startOffsets>
+            <endOffsets>
+              <option value="716" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

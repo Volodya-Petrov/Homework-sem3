@@ -27,7 +27,11 @@ namespace WorkWithThreadPool
 
         public MyTask<T> Submit<T>(Func<T> task)
         {
-            var myTask = new MyTask<T>(task);
+            if (_cancellationToken.Token.IsCancellationRequested)
+            {
+                throw new ThreadInterruptedException();
+            }
+            var myTask = new MyTask<T>(task, this);
             tasks.Enqueue(myTask.Run);
             return myTask;
         }
@@ -44,7 +48,7 @@ namespace WorkWithThreadPool
             {
                 while (true)
                 {
-                    if (_cancellationToken.Token.IsCancellationRequested)
+                    if (_cancellationToken.Token.IsCancellationRequested && tasks.IsEmpty)
                     {
                         return;
                     }
