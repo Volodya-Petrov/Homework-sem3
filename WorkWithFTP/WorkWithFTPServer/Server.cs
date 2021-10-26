@@ -21,7 +21,6 @@ namespace WorkWithFTP
         {
             IPAdress = ipAdress;
             this.port = port;
-            
         }
 
         enum Request
