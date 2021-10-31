@@ -18,6 +18,10 @@ namespace WorkWithThreadPool
 
         private CancellationTokenSource _cancellationToken;
         
+        
+        /// <summary>
+        /// Класс для параллельных вычислений
+        /// </summary>
         private class MyTask<T> : IMyTask<T>
         {
             private T _result;
@@ -42,6 +46,7 @@ namespace WorkWithThreadPool
                 resultCalculated = new ManualResetEvent(false);
             }
             
+            /// <inheritdoc />
             public T Result
             {
                 get
@@ -54,7 +59,8 @@ namespace WorkWithThreadPool
                     return _result;
                 }
             }
-    
+            
+            /// <inheritdoc />
             public bool IsCompleted { get => _isCompleted; }
             
             /// <summary>
@@ -81,7 +87,8 @@ namespace WorkWithThreadPool
                     }
                 }
             }
-    
+            
+            /// <inheritdoc />
             public IMyTask<TResult> ContinueWith<TResult>(Func<T, TResult> continueTask)
             {
                 lock (_threadPool._cancellationToken)
@@ -156,6 +163,8 @@ namespace WorkWithThreadPool
                 _cancellationToken.Cancel();
                 
             }
+
+            taskSubmitted.Set();
             for (int i = 0; i < threads.Length; i++)
             {
                 threads[i].Join();

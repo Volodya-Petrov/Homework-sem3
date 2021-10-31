@@ -3,18 +3,17 @@ using System;
 namespace WorkWithThreadPool
 {   
     /// <summary>
-    /// Интерфейс для объектов возвращаемых MyThreadPool, нужен для получения результата вычисления задачи
+    /// Интерфейс для объектов, возвращаемых MyThreadPool, нужного для получения результата вычисления задачи
     /// </summary>
-    /// <typeparam name="TResult"></typeparam>
     public interface IMyTask<TResult>
     {   
         /// <summary>
-        /// проверяет досчитана ли отправленная задача
+        /// проверяет, досчитана ли отправленная задача
         /// </summary>
         public bool IsCompleted { get; }
         
         /// <summary>
-        /// выдает результат вычисление задачи
+        /// выдает результат вычисления задачи
         /// </summary>
         public TResult Result { get; }
         

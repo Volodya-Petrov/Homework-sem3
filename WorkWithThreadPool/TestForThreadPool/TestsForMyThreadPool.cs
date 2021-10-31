@@ -13,7 +13,7 @@ namespace TestForThreadPool
 
         private Func<int>[] functions;
 
-        private MyTask<int>[] tasks;
+        private IMyTask<int>[] tasks;
 
         private MyThreadPool threadPool;
         
@@ -21,7 +21,7 @@ namespace TestForThreadPool
         public void Setup()
         {
             threadPool = new MyThreadPool(5);
-            tasks = new MyTask<int>[10];
+            tasks = new IMyTask<int>[10];
             functions = new Func<int>[10];
             for (int i = 0; i < 10; i++)
             {
@@ -73,7 +73,7 @@ namespace TestForThreadPool
         [Test]
         public void TestContinueWithShouldBeCalculatedCorrectly()
         {
-            IMyTask<string>[] continueTasks = new MyTask<string>[10];
+            IMyTask<string>[] continueTasks = new IMyTask<string>[10];
             for (int i = 0; i < 10; i++)
             {
                 continueTasks[i] = tasks[i].ContinueWith(intToString);
@@ -88,7 +88,7 @@ namespace TestForThreadPool
         [Test]
         public void TestAfterShoutdownSubmittedContinueWithShouldBeCalculatedCorrectly()
         {
-            IMyTask<string>[] continueTasks = new MyTask<string>[10];
+            IMyTask<string>[] continueTasks = new IMyTask<string>[10];
             for (int i = 0; i < 10; i++)
             {
                 continueTasks[i] = tasks[i].ContinueWith(intToString);

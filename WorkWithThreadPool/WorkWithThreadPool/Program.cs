@@ -5,6 +5,9 @@ namespace WorkWithThreadPool
 {
     class Program
     {
-        
+        private static void Main()
+        {
+            
+        }
     }
 }
