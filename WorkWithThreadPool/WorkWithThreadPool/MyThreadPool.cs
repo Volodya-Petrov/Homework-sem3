@@ -14,13 +14,113 @@ namespace WorkWithThreadPool
 
         private Thread[] threads;
 
+        private AutoResetEvent taskSubmitted;
+
         private CancellationTokenSource _cancellationToken;
+        
+        private class MyTask<T> : IMyTask<T>
+        {
+            private T _result;
+    
+            private MyThreadPool _threadPool;
+    
+            private bool _isCompleted;
+            
+            private Func<T> task;
+    
+            private ConcurrentQueue<Action> _continueTasks;
+
+            private AggregateException _exception;
+
+            private ManualResetEvent resultCalculated;
+            
+            public MyTask(Func<T> task, MyThreadPool pool)
+            {
+                this.task = task;
+                _threadPool = pool;
+                _continueTasks = new ConcurrentQueue<Action>();
+                resultCalculated = new ManualResetEvent(false);
+            }
+            
+            public T Result
+            {
+                get
+                {
+                    resultCalculated.WaitOne();
+                    if (_exception != null)
+                    {
+                        throw _exception;
+                    }
+                    return _result;
+                }
+            }
+    
+            public bool IsCompleted { get => _isCompleted; }
+            
+            /// <summary>
+            /// функция вычисления результата задачи
+            /// </summary>
+            public void Run()
+            {
+                try
+                {
+                    _result = task();
+                }
+                catch (Exception e)
+                {
+                    _exception = new AggregateException(e);
+                }
+                _isCompleted = true;
+                resultCalculated.Set();
+                while (!_continueTasks.IsEmpty)
+                {
+                    if (_continueTasks.TryDequeue(out Action continueTask))
+                    {
+                        _threadPool.tasks.Enqueue(continueTask);
+                        _threadPool.taskSubmitted.Set();
+                    }
+                }
+            }
+    
+            public IMyTask<TResult> ContinueWith<TResult>(Func<T, TResult> continueTask)
+            {
+                lock (_threadPool._cancellationToken)
+                {
+                    if (_threadPool._cancellationToken.Token.IsCancellationRequested)
+                    {
+                        throw new ThreadInterruptedException();
+                    }
+                    if (_isCompleted)
+                    {
+                        return _threadPool.Submit(() =>
+                        {
+                            if (_exception != null)
+                            {
+                                throw _exception;
+                            }
+                            return continueTask(_result);
+                        });
+                    }
+                    var newContinueTask = new MyTask<TResult>(() =>
+                    {
+                        if (_exception != null)
+                        {
+                            throw _exception;
+                        }
+                        return continueTask(_result);
+                    }, _threadPool);
+                    _continueTasks.Enqueue(newContinueTask.Run);
+                    return newContinueTask;
+                }
+            }
+        }
         
         public MyThreadPool(int countOfThreads)
         {
             _cancellationToken = new CancellationTokenSource();
             tasks = new ConcurrentQueue<Action>();
             threads = new Thread[countOfThreads];
+            taskSubmitted = new AutoResetEvent(false);
             for (int i = 0; i < countOfThreads; i++)
             {
                 threads[i] = CreateThread();
@@ -31,15 +131,19 @@ namespace WorkWithThreadPool
         /// <summary>
         /// добавляет задачу в очередь на исполнение
         /// </summary>
-        public MyTask<T> Submit<T>(Func<T> task)
+        public IMyTask<T> Submit<T>(Func<T> task)
         {
-            if (_cancellationToken.Token.IsCancellationRequested)
+            lock (_cancellationToken)
             {
-                throw new ThreadInterruptedException();
+                if (_cancellationToken.Token.IsCancellationRequested)
+                {
+                    throw new ThreadInterruptedException();
+                }
+                var myTask = new MyTask<T>(task, this);
+                tasks.Enqueue(myTask.Run);
+                taskSubmitted.Set();
+                return myTask;
             }
-            var myTask = new MyTask<T>(task, this, _cancellationToken.Token);
-            tasks.Enqueue(myTask.Run);
-            return myTask;
         }
         
         /// <summary>
@@ -47,8 +151,15 @@ namespace WorkWithThreadPool
         /// </summary>
         public void Shutdown()
         {
-            _cancellationToken.Cancel();
-            while (threads.Any(t => t.IsAlive)) ;
+            lock (_cancellationToken)
+            {
+                _cancellationToken.Cancel();
+                
+            }
+            for (int i = 0; i < threads.Length; i++)
+            {
+                threads[i].Join();
+            }
         }
         
         private Thread CreateThread()
@@ -60,6 +171,11 @@ namespace WorkWithThreadPool
                     if (_cancellationToken.Token.IsCancellationRequested && tasks.IsEmpty)
                     {
                         return;
+                    }
+                    taskSubmitted.WaitOne();
+                    if (!tasks.IsEmpty)
+                    {
+                        taskSubmitted.Set();
                     }
                     if (tasks.TryDequeue(out Action task))
                     {
