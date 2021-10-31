@@ -14,7 +14,7 @@ namespace WorkWithThreadPool
 
         private Thread[] threads;
 
-        private AutoResetEvent taskSubmitted;
+        private AutoResetEvent threadPoolEvent;
 
         private CancellationTokenSource _cancellationToken;
         
@@ -83,7 +83,7 @@ namespace WorkWithThreadPool
                     if (_continueTasks.TryDequeue(out Action continueTask))
                     {
                         _threadPool.tasks.Enqueue(continueTask);
-                        _threadPool.taskSubmitted.Set();
+                        _threadPool.threadPoolEvent.Set();
                     }
                 }
             }
@@ -127,7 +127,7 @@ namespace WorkWithThreadPool
             _cancellationToken = new CancellationTokenSource();
             tasks = new ConcurrentQueue<Action>();
             threads = new Thread[countOfThreads];
-            taskSubmitted = new AutoResetEvent(false);
+            threadPoolEvent = new AutoResetEvent(false);
             for (int i = 0; i < countOfThreads; i++)
             {
                 threads[i] = CreateThread();
@@ -148,7 +148,7 @@ namespace WorkWithThreadPool
                 }
                 var myTask = new MyTask<T>(task, this);
                 tasks.Enqueue(myTask.Run);
-                taskSubmitted.Set();
+                threadPoolEvent.Set();
                 return myTask;
             }
         }
@@ -164,7 +164,7 @@ namespace WorkWithThreadPool
                 
             }
 
-            taskSubmitted.Set();
+            threadPoolEvent.Set();
             for (int i = 0; i < threads.Length; i++)
             {
                 threads[i].Join();
@@ -181,10 +181,10 @@ namespace WorkWithThreadPool
                     {
                         return;
                     }
-                    taskSubmitted.WaitOne();
+                    threadPoolEvent.WaitOne();
                     if (!tasks.IsEmpty)
                     {
-                        taskSubmitted.Set();
+                        threadPoolEvent.Set();
                     }
                     if (tasks.TryDequeue(out Action task))
                     {

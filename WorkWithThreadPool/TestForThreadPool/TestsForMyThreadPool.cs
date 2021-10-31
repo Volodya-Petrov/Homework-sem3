@@ -106,5 +106,25 @@ namespace TestForThreadPool
             threadPool.Shutdown();
             Assert.Throws<ThreadInterruptedException>(() => tasks[0].ContinueWith(intToString));
         }
+
+        [Test]
+        public void TestTaskResultShouldThrowExceptions()
+        {
+            var func = new Func<int>(() =>
+            {
+                throw new Exception();
+                return 1;
+            });
+            var task = threadPool.Submit(func);
+            var continueTask = task.ContinueWith(intToString);
+            Assert.Throws<AggregateException>(() =>
+            {
+                var test = task.Result;
+            });
+            Assert.Throws<AggregateException>(() =>
+            {
+                var test = continueTask.Result;
+            });
+        }
     }
 }
