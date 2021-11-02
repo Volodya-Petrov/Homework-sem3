@@ -16,14 +16,16 @@ namespace TestForThreadPool
         private IMyTask<int>[] tasks;
 
         private MyThreadPool threadPool;
+
+        private int countOfTasks = 50;
         
         [SetUp]
         public void Setup()
         {
             threadPool = new MyThreadPool(5);
-            tasks = new IMyTask<int>[10];
-            functions = new Func<int>[10];
-            for (int i = 0; i < 10; i++)
+            tasks = new IMyTask<int>[countOfTasks];
+            functions = new Func<int>[countOfTasks];
+            for (int i = 0; i < countOfTasks; i++)
             {
                 var index = i;
                 functions[i] = new Func<int>(() =>
@@ -38,7 +40,7 @@ namespace TestForThreadPool
                 });
             }
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < countOfTasks; i++)
             {
                 tasks[i] = threadPool.Submit(functions[i]);
             }
@@ -47,7 +49,7 @@ namespace TestForThreadPool
         [Test]
         public void TestThreadPoolShouldSolveTasksCorrectly()
         {
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < countOfTasks; i++)
             {
                 Assert.AreEqual(answerForFuncs + i, tasks[i].Result);
             }
@@ -57,7 +59,7 @@ namespace TestForThreadPool
         public void TestAfterShoutDownShouldCalculateSubmittedTasks()
         {
             threadPool.Shutdown();
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < countOfTasks; i++)
             {
                 Assert.AreEqual(answerForFuncs + i, tasks[i].Result);
             }
@@ -73,13 +75,13 @@ namespace TestForThreadPool
         [Test]
         public void TestContinueWithShouldBeCalculatedCorrectly()
         {
-            IMyTask<string>[] continueTasks = new IMyTask<string>[10];
-            for (int i = 0; i < 10; i++)
+            IMyTask<string>[] continueTasks = new IMyTask<string>[countOfTasks];
+            for (int i = 0; i < countOfTasks; i++)
             {
                 continueTasks[i] = tasks[i].ContinueWith(intToString);
             }
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < countOfTasks; i++)
             {
                 Assert.AreEqual((answerForFuncs + i).ToString(), continueTasks[i].Result);
             }
@@ -88,13 +90,13 @@ namespace TestForThreadPool
         [Test]
         public void TestAfterShoutdownSubmittedContinueWithShouldBeCalculatedCorrectly()
         {
-            IMyTask<string>[] continueTasks = new IMyTask<string>[10];
-            for (int i = 0; i < 10; i++)
+            IMyTask<string>[] continueTasks = new IMyTask<string>[countOfTasks];
+            for (int i = 0; i < countOfTasks; i++)
             {
                 continueTasks[i] = tasks[i].ContinueWith(intToString);
             }
             threadPool.Shutdown();
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < countOfTasks; i++)
             {
                 Assert.AreEqual((answerForFuncs + i).ToString(), continueTasks[i].Result);
             }
