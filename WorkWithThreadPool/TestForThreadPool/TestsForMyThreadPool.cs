@@ -55,6 +55,7 @@ namespace TestForThreadPool
             }
         }
         
+        /*
         [Test]
         public void TestAfterShoutDownShouldCalculateSubmittedTasks()
         {
@@ -64,7 +65,7 @@ namespace TestForThreadPool
                 Assert.AreEqual(answerForFuncs + i, tasks[i].Result);
             }
         }
-        /*
+        
         [Test]
         public void TestAfterShoutDownUCantSumbitNewTask()
         {
