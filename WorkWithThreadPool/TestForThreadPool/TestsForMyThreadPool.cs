@@ -17,7 +17,7 @@ namespace TestForThreadPool
 
         private MyThreadPool threadPool;
 
-        private int countOfTasks = 50;
+        private int countOfTasks = 20;
         
         [SetUp]
         public void Setup()
@@ -45,7 +45,7 @@ namespace TestForThreadPool
                 tasks[i] = threadPool.Submit(functions[i]);
             }
         }
-        /*
+        
         [Test]
         public void TestThreadPoolShouldSolveTasksCorrectly()
         {
@@ -55,7 +55,7 @@ namespace TestForThreadPool
             }
         }
         
-        */
+        
         [Test]
         public void TestAfterShoutDownShouldCalculateSubmittedTasks()
         {
@@ -65,7 +65,7 @@ namespace TestForThreadPool
                 Assert.AreEqual(answerForFuncs + i, tasks[i].Result);
             }
         }
-        /*
+
         [Test]
         public void TestAfterShoutDownUCantSumbitNewTask()
         {
@@ -128,6 +128,6 @@ namespace TestForThreadPool
             {
                 var test = continueTask.Result;
             });
-        } */
+        } 
     }
 }

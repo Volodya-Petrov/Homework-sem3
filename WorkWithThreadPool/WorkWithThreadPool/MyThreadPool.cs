@@ -17,6 +17,8 @@ namespace WorkWithThreadPool
         private AutoResetEvent threadPoolEvent;
 
         private CancellationTokenSource _cancellationToken;
+
+        private int tasksCount; 
         
         
         /// <summary>
@@ -37,7 +39,7 @@ namespace WorkWithThreadPool
             private AggregateException _exception;
 
             private ManualResetEvent resultCalculated;
-            
+
             public MyTask(Func<T> task, MyThreadPool pool)
             {
                 this.task = task;
@@ -116,6 +118,7 @@ namespace WorkWithThreadPool
                         }
                         return continueTask(_result);
                     }, _threadPool);
+                    Interlocked.Increment(ref _threadPool.tasksCount);
                     _continueTasks.Enqueue(newContinueTask.Run);
                     return newContinueTask;
                 }
@@ -148,6 +151,7 @@ namespace WorkWithThreadPool
                 }
                 var myTask = new MyTask<T>(task, this);
                 tasks.Enqueue(myTask.Run);
+                Interlocked.Increment(ref tasksCount);
                 threadPoolEvent.Set();
                 return myTask;
             }
@@ -177,17 +181,18 @@ namespace WorkWithThreadPool
             {
                 while (true)
                 {
-                    if (_cancellationToken.Token.IsCancellationRequested && tasks.IsEmpty)
+                    if (_cancellationToken.Token.IsCancellationRequested && tasksCount == 0)
                     {
                         return;
                     }
                     threadPoolEvent.WaitOne();
-                    if (!tasks.IsEmpty)
+                    if (!tasks.IsEmpty || _cancellationToken.Token.IsCancellationRequested)
                     {
                         threadPoolEvent.Set();
                     }
                     if (tasks.TryDequeue(out Action task))
                     {
+                        Interlocked.Decrement(ref tasksCount);
                         task();
                     }
                 }
