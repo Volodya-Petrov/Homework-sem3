@@ -45,7 +45,7 @@ namespace TestForThreadPool
                 tasks[i] = threadPool.Submit(functions[i]);
             }
         }
-        /*
+        
         [Test]
         public void TestThreadPoolShouldSolveTasksCorrectly()
         {
@@ -64,7 +64,7 @@ namespace TestForThreadPool
                 Assert.AreEqual(answerForFuncs + i, tasks[i].Result);
             }
         }
-
+        /*
         [Test]
         public void TestAfterShoutDownUCantSumbitNewTask()
         {
