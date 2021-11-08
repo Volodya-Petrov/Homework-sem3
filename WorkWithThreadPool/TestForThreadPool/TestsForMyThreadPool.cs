@@ -57,7 +57,7 @@ namespace TestForThreadPool
         
         
         [Test]
-        public void TestAfterShoutDownShouldCalculateSubmittedTasks()
+        public void TestAfterShutDownShouldCalculateSubmittedTasks()
         {
             threadPool.Shutdown();
             for (int i = 0; i < countOfTasks; i++)
@@ -67,7 +67,7 @@ namespace TestForThreadPool
         }
 
         [Test]
-        public void TestAfterShoutDownUCantSumbitNewTask()
+        public void TestAfterShutDownUCantSubmitNewTask()
         {
             threadPool.Shutdown();
             Assert.Throws<ThreadInterruptedException>(() => threadPool.Submit(functions[0]));
@@ -89,7 +89,7 @@ namespace TestForThreadPool
         }
         
         [Test]
-        public void TestAfterShoutdownSubmittedContinueWithShouldBeCalculatedCorrectly()
+        public void TestAfterShutdownSubmittedContinueWithShouldBeCalculatedCorrectly()
         {
             IMyTask<string>[] continueTasks = new IMyTask<string>[countOfTasks];
             for (int i = 0; i < countOfTasks; i++)
@@ -104,7 +104,7 @@ namespace TestForThreadPool
         }
         
         [Test]
-        public void TestAfterShoutDownUCantSumbitContinueWith()
+        public void TestAfterShutDownUCantSubmitContinueWith()
         {
             threadPool.Shutdown();
             Assert.Throws<ThreadInterruptedException>(() => tasks[0].ContinueWith(intToString));
