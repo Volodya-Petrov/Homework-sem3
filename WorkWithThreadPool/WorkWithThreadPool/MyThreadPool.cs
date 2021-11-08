@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace WorkWithThreadPool
 {   
@@ -16,35 +17,36 @@ namespace WorkWithThreadPool
 
         private AutoResetEvent threadPoolEvent;
 
-        private CancellationTokenSource _cancellationToken;
+        private CancellationTokenSource cancellationToken;
 
         private int tasksCount; 
-        
         
         /// <summary>
         /// Класс для параллельных вычислений
         /// </summary>
         private class MyTask<T> : IMyTask<T>
         {
-            private T _result;
+            private T result;
     
-            private MyThreadPool _threadPool;
+            private MyThreadPool threadPool;
     
-            private bool _isCompleted;
+            private bool isCompleted;
             
             private Func<T> task;
     
-            private ConcurrentQueue<Action> _continueTasks;
+            private ConcurrentQueue<Action> continueTasks;
 
-            private AggregateException _exception;
+            private AggregateException exception;
 
             private ManualResetEvent resultCalculated;
+
+            private object locker = new();
 
             public MyTask(Func<T> task, MyThreadPool pool)
             {
                 this.task = task;
-                _threadPool = pool;
-                _continueTasks = new ConcurrentQueue<Action>();
+                threadPool = pool;
+                continueTasks = new ConcurrentQueue<Action>();
                 resultCalculated = new ManualResetEvent(false);
             }
             
@@ -54,16 +56,16 @@ namespace WorkWithThreadPool
                 get
                 {
                     resultCalculated.WaitOne();
-                    if (_exception != null)
+                    if (exception != null)
                     {
-                        throw _exception;
+                        throw exception;
                     }
-                    return _result;
+                    return result;
                 }
             }
             
             /// <inheritdoc />
-            public bool IsCompleted { get => _isCompleted; }
+            public bool IsCompleted => isCompleted;
             
             /// <summary>
             /// функция вычисления результата задачи
@@ -72,20 +74,24 @@ namespace WorkWithThreadPool
             {
                 try
                 {
-                    _result = task();
+                    result = task();
                 }
                 catch (Exception e)
                 {
-                    _exception = new AggregateException(e);
+                    exception = new AggregateException(e);
                 }
-                _isCompleted = true;
+
+                task = null;
+                isCompleted = true;
                 resultCalculated.Set();
-                while (!_continueTasks.IsEmpty)
+                lock (locker)
                 {
-                    if (_continueTasks.TryDequeue(out Action continueTask))
+                    while (!continueTasks.IsEmpty)
                     {
-                        _threadPool.tasks.Enqueue(continueTask);
-                        _threadPool.threadPoolEvent.Set();
+                        if (continueTasks.TryDequeue(out Action continueTask))
+                        {
+                            threadPool.SubmitAfterShutDown(continueTask);
+                        }
                     }
                 }
             }
@@ -93,41 +99,41 @@ namespace WorkWithThreadPool
             /// <inheritdoc />
             public IMyTask<TResult> ContinueWith<TResult>(Func<T, TResult> continueTask)
             {
-                lock (_threadPool._cancellationToken)
+                lock (threadPool.cancellationToken)
                 {
-                    if (_threadPool._cancellationToken.Token.IsCancellationRequested)
+                    if (threadPool.cancellationToken.Token.IsCancellationRequested)
                     {
-                        throw new ThreadInterruptedException();
+                        throw new InvalidOperationException();
                     }
-                    if (_isCompleted)
+
+                    Func<TResult> continueTaskForThreadPool = () =>
                     {
-                        return _threadPool.Submit(() =>
+                        if (exception != null)
                         {
-                            if (_exception != null)
-                            {
-                                throw _exception;
-                            }
-                            return continueTask(_result);
-                        });
-                    }
-                    var newContinueTask = new MyTask<TResult>(() =>
-                    {
-                        if (_exception != null)
-                        {
-                            throw _exception;
+                            throw exception;
                         }
-                        return continueTask(_result);
-                    }, _threadPool);
-                    Interlocked.Increment(ref _threadPool.tasksCount);
-                    _continueTasks.Enqueue(newContinueTask.Run);
-                    return newContinueTask;
+
+                        return continueTask(result);
+                    };
+                    
+                    lock (locker)
+                    {
+                        if (isCompleted)
+                        {
+                            return threadPool.Submit(continueTaskForThreadPool);
+                        }
+                        var newContinueTask = new MyTask<TResult>(continueTaskForThreadPool, threadPool);
+                        threadPool.TaskAdded();
+                        continueTasks.Enqueue(newContinueTask.Run);
+                        return newContinueTask;
+                    }
                 }
             }
         }
         
         public MyThreadPool(int countOfThreads)
         {
-            _cancellationToken = new CancellationTokenSource();
+            cancellationToken = new CancellationTokenSource();
             tasks = new ConcurrentQueue<Action>();
             threads = new Thread[countOfThreads];
             threadPoolEvent = new AutoResetEvent(false);
@@ -143,11 +149,11 @@ namespace WorkWithThreadPool
         /// </summary>
         public IMyTask<T> Submit<T>(Func<T> task)
         {
-            lock (_cancellationToken)
+            lock (cancellationToken)
             {
-                if (_cancellationToken.Token.IsCancellationRequested)
+                if (cancellationToken.Token.IsCancellationRequested)
                 {
-                    throw new ThreadInterruptedException();
+                    throw new InvalidOperationException();
                 }
                 var myTask = new MyTask<T>(task, this);
                 tasks.Enqueue(myTask.Run);
@@ -162,10 +168,9 @@ namespace WorkWithThreadPool
         /// </summary>
         public void Shutdown()
         {
-            lock (_cancellationToken)
+            lock (cancellationToken)
             {
-                _cancellationToken.Cancel();
-                
+                cancellationToken.Cancel();
             }
 
             threadPoolEvent.Set();
@@ -181,12 +186,12 @@ namespace WorkWithThreadPool
             {
                 while (true)
                 {
-                    if (_cancellationToken.Token.IsCancellationRequested && tasksCount == 0)
+                    if (cancellationToken.Token.IsCancellationRequested && tasksCount == 0)
                     {
                         return;
                     }
                     threadPoolEvent.WaitOne();
-                    if (!tasks.IsEmpty || _cancellationToken.Token.IsCancellationRequested)
+                    if (!tasks.IsEmpty || cancellationToken.Token.IsCancellationRequested)
                     {
                         threadPoolEvent.Set();
                     }
@@ -199,6 +204,17 @@ namespace WorkWithThreadPool
             });
             thread.IsBackground = true;
             return thread;
+        }
+
+        private void TaskAdded()
+        {
+            Interlocked.Increment(ref tasksCount);
+        }
+
+        private void SubmitAfterShutDown(Action task)
+        {
+            tasks.Enqueue(task);
+            threadPoolEvent.Set();
         }
     }
 }

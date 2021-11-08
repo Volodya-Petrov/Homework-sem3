@@ -70,13 +70,13 @@ namespace TestForThreadPool
         public void TestAfterShutDownUCantSubmitNewTask()
         {
             threadPool.Shutdown();
-            Assert.Throws<ThreadInterruptedException>(() => threadPool.Submit(functions[0]));
+            Assert.Throws<InvalidOperationException>(() => threadPool.Submit(functions[0]));
         }
 
         [Test]
         public void TestContinueWithShouldBeCalculatedCorrectly()
         {
-            IMyTask<string>[] continueTasks = new IMyTask<string>[countOfTasks];
+            var continueTasks = new IMyTask<string>[countOfTasks];
             for (int i = 0; i < countOfTasks; i++)
             {
                 continueTasks[i] = tasks[i].ContinueWith(intToString);
@@ -91,7 +91,7 @@ namespace TestForThreadPool
         [Test]
         public void TestAfterShutdownSubmittedContinueWithShouldBeCalculatedCorrectly()
         {
-            IMyTask<string>[] continueTasks = new IMyTask<string>[countOfTasks];
+            var continueTasks = new IMyTask<string>[countOfTasks];
             for (int i = 0; i < countOfTasks; i++)
             {
                 continueTasks[i] = tasks[i].ContinueWith(intToString);
@@ -107,7 +107,7 @@ namespace TestForThreadPool
         public void TestAfterShutDownUCantSubmitContinueWith()
         {
             threadPool.Shutdown();
-            Assert.Throws<ThreadInterruptedException>(() => tasks[0].ContinueWith(intToString));
+            Assert.Throws<InvalidOperationException>(() => tasks[0].ContinueWith(intToString));
         }
 
         [Test]

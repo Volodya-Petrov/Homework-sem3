@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a973aa1e-147c-4375-80de-bb0e7b7aac81" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/WorkWithMatrix.test/testForMatrixMultiplication.cs" beforeDir="false" afterPath="$PROJECT_DIR$/WorkWithMatrix.test/testForMatrixMultiplication.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WorkWithMatrix/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/WorkWithMatrix/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WorkWithMatrix/Statistic.cs" beforeDir="false" afterPath="$PROJECT_DIR$/WorkWithMatrix/Statistic.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.WorkWithMatrix/.idea/indexLayout.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.WorkWithMatrix/.idea/indexLayout.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.WorkWithMatrix/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.WorkWithMatrix/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,10 +15,6 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
-  </component>
-  <component name="HighlightingSettingsPerFile">
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2E9BEEB1-8083-4F4B-9ABE-A5F3DB1BC8BD/1B2/ExecutionContext.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2E9BEEB1-8083-4F4B-9ABE-A5F3DB1BC8BD/394/FileStream.Windows.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
@@ -42,6 +37,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="settings.editor.selected.configurable" value="preferences.environmentSetup" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RunManager" selected=".NET Project.WorkWithMatrix">
@@ -77,12 +73,17 @@
       <workItem from="1631557026400" duration="528000" />
       <workItem from="1632070249685" duration="12311000" />
       <workItem from="1632141117630" duration="3047000" />
+      <workItem from="1636055084361" duration="67000" />
+      <workItem from="1636055166465" duration="372000" />
+      <workItem from="1636055554179" duration="532000" />
+      <workItem from="1636056129355" duration="103000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="UnityCheckinConfiguration" checkUnsavedScenes="true" />
   <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
   <component name="UnityUnitTestConfiguration" currentTestLauncher="NUnit" />
   <component name="Vcs.Log.Tabs.Properties">
@@ -106,27 +107,13 @@
         <line-breakpoint enabled="true" type="DotNet Breakpoints">
           <url>file://$PROJECT_DIR$/WorkWithMatrix/Program.cs</url>
           <line>15</line>
-          <properties documentPath="C:\Users\Привет\source\repos\Homework-sem3\Homework-sem3\WorkWithMatrix\WorkWithMatrix\Program.cs" initialLine="9" containingFunctionPresentation="method 'Main'">
-            <startOffsets>
-              <option value="564" />
-            </startOffsets>
-            <endOffsets>
-              <option value="565" />
-            </endOffsets>
-          </properties>
+          <properties documentPath="C:\Users\Привет\source\repos\Homework-sem3\Homework-sem3\WorkWithMatrix\WorkWithMatrix\Program.cs" initialLine="9" containingFunctionPresentation="method 'Main'" />
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DotNet Breakpoints">
           <url>file://$PROJECT_DIR$/WorkWithMatrix.test/testForMatrixMultiplication.cs</url>
           <line>21</line>
-          <properties documentPath="C:\Users\Привет\source\repos\Homework-sem3\Homework-sem3\WorkWithMatrix\WorkWithMatrix.test\testForMatrixMultiplication.cs" initialLine="20" containingFunctionPresentation="method 'TestForCalculationSquareMatrices'">
-            <startOffsets>
-              <option value="867" />
-            </startOffsets>
-            <endOffsets>
-              <option value="918" />
-            </endOffsets>
-          </properties>
+          <properties documentPath="C:\Users\Привет\source\repos\Homework-sem3\Homework-sem3\WorkWithMatrix\WorkWithMatrix.test\testForMatrixMultiplication.cs" initialLine="20" containingFunctionPresentation="method 'TestForCalculationSquareMatrices'" />
           <option name="timeStamp" value="6" />
         </line-breakpoint>
       </breakpoints>
