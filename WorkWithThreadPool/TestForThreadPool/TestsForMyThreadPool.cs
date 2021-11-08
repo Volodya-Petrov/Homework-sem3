@@ -128,6 +128,50 @@ namespace TestForThreadPool
             {
                 var test = continueTask.Result;
             });
-        } 
+        }
+
+        [Test]
+        public void TestWithSeveralThreads()
+        {
+            var threads = new Thread[10];
+            for (int i = 0; i < 10; i++)
+            {
+                threads[i] = new Thread(() =>
+                {
+                    var threadTasks = new IMyTask<int>[countOfTasks];
+                    var threadFunctions = new Func<int>[countOfTasks];
+                    for (int j = 0; j < countOfTasks; j++)
+                    {
+                        var index = j;
+                        threadFunctions[j] = new Func<int>(() =>
+                        {
+                            var result = 0;
+                            for (int z = 0; z < answerForFuncs; z++)
+                            {
+                                result++;
+                            }
+
+                            return result + index;
+                        });
+                    }
+
+                    for (int j = 0; j < countOfTasks; j++)
+                    {
+                        threadTasks[j] = threadPool.Submit(functions[j]);
+                    }
+
+                    for (int j = 0; j < countOfTasks; j++)
+                    {
+                        Assert.AreEqual(answerForFuncs + j, threadTasks[j].Result);
+                    }
+                });
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                threads[i].Start();
+                threads[i].Join();
+            }
+        }
     }
 }
