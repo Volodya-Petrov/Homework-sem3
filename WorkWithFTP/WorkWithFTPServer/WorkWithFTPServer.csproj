@@ -6,4 +6,13 @@
         <RootNamespace>WorkWithFTP</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Compile Include="..\..\..\..\Рабочий стол\Server\Program.cs">
+        <Link>Program.cs</Link>
+      </Compile>
+      <Compile Include="..\..\..\..\Рабочий стол\Server\Server.cs">
+        <Link>Server.cs</Link>
+      </Compile>
+    </ItemGroup>
+
 </Project>
