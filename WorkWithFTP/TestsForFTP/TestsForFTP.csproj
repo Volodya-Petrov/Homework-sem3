@@ -18,10 +18,4 @@
       <ProjectReference Include="..\WorkWithFTPServer\WorkWithFTPServer.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Compile Include="..\..\..\..\Рабочий стол\tests.cs">
-        <Link>tests.cs</Link>
-      </Compile>
-    </ItemGroup>
-
 </Project>

@@ -5,13 +5,4 @@
         <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
 
-    <ItemGroup>
-      <Compile Include="..\..\..\..\Рабочий стол\Client\Client.cs">
-        <Link>Client.cs</Link>
-      </Compile>
-      <Compile Include="..\..\..\..\Рабочий стол\Client\Program.cs">
-        <Link>Program.cs</Link>
-      </Compile>
-    </ItemGroup>
-
 </Project>
