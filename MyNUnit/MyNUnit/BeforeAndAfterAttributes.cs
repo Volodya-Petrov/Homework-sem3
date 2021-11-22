@@ -2,17 +2,17 @@ using System;
 
 namespace MyNUnit
 {
-    public class BeforeAttribute : Attribute
+    public class Before : Attribute
     {
-        public BeforeAttribute()
+        public Before()
         {
             
         }
     }
 
-    public class AfterAttribute : Attribute
+    public class After : Attribute
     {
-        public AfterAttribute()
+        public After()
         {
             
         }
