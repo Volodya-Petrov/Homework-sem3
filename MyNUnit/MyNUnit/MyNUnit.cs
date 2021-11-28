@@ -12,7 +12,7 @@ namespace MyNUnit
         public string[] RunTests(string path)
         {
             var allDllFiles = Directory.GetFiles(path, "*.dll");
-            var tasks = new Task<string[]>[allDllFiles.Length];
+            var tasks = new Task<List<string>>[allDllFiles.Length];
             for (int i = 0; i < allDllFiles.Length; i++)
             {
                 var index = i;
@@ -20,23 +20,32 @@ namespace MyNUnit
             }
 
             Task.WhenAll(tasks).Wait();
-            var infoAboutTests = new string[1];
+            var infoAboutTests = new List<string>();
             for (int i = 0; i < tasks.Length; i++)
             {
-                infoAboutTests.Concat(tasks[i].Result);
+                infoAboutTests = infoAboutTests.Union(tasks[i].Result).ToList();
             }
 
-            return infoAboutTests;
+            if (infoAboutTests.Count == 0)
+            {
+                return new string[] { "По заданному пути не было найдено тестов" };
+            }
+            return infoAboutTests.ToArray();
         }
         
-        private string[] RunTestsFromDll(string path)
+        private List<string> RunTestsFromDll(string path)
         {
-            var messages = new string[1];
+            var messages = new List<string>();
             var classes = Assembly.LoadFrom(path).ExportedTypes.Where(t => t.IsClass);
+            if (path == "/home/devyatka/programming/Homework-sem3/MyNUnit/TestForMyNUnit/bin/Debug/net5.0" +
+                "/TestForMyNUnit.dll")
+            {
+                
+            }
             foreach (var exportCLass in classes)
             {
                 var infoAboutTests = RunTestsFromClass(exportCLass);
-                messages.Concat(infoAboutTests);
+                messages = messages.Union(infoAboutTests).ToList();
             }
             return messages;
         }
@@ -62,7 +71,7 @@ namespace MyNUnit
         {
             foreach (var attributes in method.CustomAttributes)
             {
-                var attributeType = attributes.GetType();
+                var attributeType = attributes.AttributeType;
                 if (attributeType == typeof(Test))
                 {
                     tests.Add(method);
@@ -135,6 +144,7 @@ namespace MyNUnit
 
         private void RunTest(MethodInfo test, dynamic classInstance, Type expected, List<string> messagesForUser)
         {
+            var message = "";
             try
             {
                 test.Invoke(classInstance, null);
@@ -143,32 +153,35 @@ namespace MyNUnit
             {
                 if (expected == null)
                 {
-                    messagesForUser.Add($"Тест {test.Name} провален: возникло исключение {exception.Message}");
+                    message = $"Тест {test.Name} провален: возникло исключение {exception.Message}";
                 }
-                else if (exception.GetType() != expected)
+                else if (exception.InnerException.GetType() != expected)
                 {
-                    messagesForUser.Add(
-                        $"Тест {test.Name} провален: ожидалось исключения типа {expected}, возникло {exception.GetType()} ");
+                    message = $"Тест {test.Name} провален: ожидалось исключения типа {expected}, возникло {exception.GetType()} ";
                 }
                 else
                 {
-                    messagesForUser.Add($"Тест {test.Name} прошел успешно");
+                    message = $"Тест {test.Name} прошел успешно";
                 }
             }
             finally
             {
-                if (expected == null)
+                if (message == "")
                 {
-                    messagesForUser.Add($"Тест {test.Name} прошел успешно");
-                }
-                else
-                {
-                    messagesForUser.Add($"Тест {test.Name} провален: ожидалось исключения типа {expected}");
+                    if (expected == null)
+                    {
+                        message = $"Тест {test.Name} прошел успешно";
+                    }
+                    else
+                    {
+                        message = $"Тест {test.Name} провален: ожидалось исключения типа {expected}";
+                    }
                 }
             }
+            messagesForUser.Add(message);
         }
         
-        private string[] RunTestsFromClass(Type classFromDll)
+        private List<string> RunTestsFromClass(Type classFromDll)
         {
             var after = new List<MethodInfo>();
             var before = new List<MethodInfo>();
@@ -179,7 +192,7 @@ namespace MyNUnit
             GetMethodsWithAttributes(before, after, beforeClass, afterClass, tests, messagesForUser, classFromDll);
             if (tests.Count == 0)
             {
-                return messagesForUser.ToArray();
+                return messagesForUser;
             }
             
             messagesForUser.Add($"Запуск тестов из класса {classFromDll.Name}");
@@ -202,7 +215,7 @@ namespace MyNUnit
             
             RunMethods(afterClass, null, messagesForUser);
 
-            return messagesForUser.ToArray();
+            return messagesForUser;
         }
     }
 }

@@ -4,7 +4,7 @@ namespace MyNUnit
 {
     public class Test : Attribute
     {
-        public Test(Type expected, string ignore)
+        public Test(Type expected, string ignore = null)
         {
             Expected = expected;
             Ignore = ignore;
