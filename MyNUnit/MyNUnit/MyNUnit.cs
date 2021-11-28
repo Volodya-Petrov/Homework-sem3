@@ -30,7 +30,7 @@ namespace MyNUnit
         }
 
         private void AddMethodInRightList(List<MethodInfo> before, List<MethodInfo> after,
-            List<MethodInfo> beforeClass, List<MethodInfo> afterClass, List<MethodInfo> tests, MethodInfo method)
+            List<MethodInfo> beforeClass, List<MethodInfo> afterClass, List<MethodInfo> tests, List<string> errors, MethodInfo method)
         {
             foreach (var attributes in method.CustomAttributes)
             {
@@ -52,12 +52,26 @@ namespace MyNUnit
 
                 if (attributeType == typeof(BeforeClass))
                 {
-                    beforeClass.Add(method);
+                    if (method.IsStatic)
+                    {
+                        beforeClass.Add(method);
+                    }
+                    else
+                    {
+                        errors.Add($"Метод {method.Name} содержит атрибут BeforeClass, но не является статическим");
+                    }
                 }
 
                 if (attributeType == typeof(AfterClass))
                 {
-                    afterClass.Add(method);
+                    if (method.IsStatic)
+                    {
+                        afterClass.Add(method);
+                    }
+                    else
+                    {
+                        errors.Add($"Метод {method.Name} содержит атрибут AfterClass, но не является статическим");
+                    }
                 }
             }
         }
@@ -72,10 +86,59 @@ namespace MyNUnit
                     messages.Add($"Метод {methodInfo.Name} имеет два несовместимых атрибута");
                     continue;
                 }
-                AddMethodInRightList(before, after, beforeClass, afterClass, tests, methodInfo);
+                AddMethodInRightList(before, after, beforeClass, afterClass, tests, messages, methodInfo);
             }
         }
-        
+
+        private void RunMethods(List<MethodInfo> methods, dynamic classInstance, List<string> bugsReport)
+        {
+            foreach (var method in methods)
+            {
+                try
+                {
+                    method.Invoke(classInstance, null);
+                }
+                catch (Exception e)
+                {
+                    bugsReport.Add($"В методе {method.Name} возникло исключение: {e.Message}");
+                }
+            }
+        }
+
+        private void RunTest(MethodInfo test, dynamic classInstance, Type expected, List<string> messagesForUser)
+        {
+            try
+            {
+                test.Invoke(classInstance, null);
+            }
+            catch (Exception exception)
+            {
+                if (expected == null)
+                {
+                    messagesForUser.Add($"Тест {test.Name} провален: возникло исключение {exception.Message}");
+                }
+                else if (exception.GetType() != expected)
+                {
+                    messagesForUser.Add(
+                        $"Тест {test.Name} провален: ожидалось исключения типа {expected}, возникло {exception.GetType()} ");
+                }
+                else
+                {
+                    messagesForUser.Add($"Тест {test.Name} прошел успешно");
+                }
+            }
+            finally
+            {
+                if (expected == null)
+                {
+                    messagesForUser.Add($"Тест {test.Name} прошел успешно");
+                }
+                else
+                {
+                    messagesForUser.Add($"Тест {test.Name} провален: ожидалось исключения типа {expected}");
+                }
+            }
+        }
         
         private string[] RunTestsFromClass(Type classFromDll)
         {
@@ -85,45 +148,33 @@ namespace MyNUnit
             var afterClass = new List<MethodInfo>();
             var tests = new List<MethodInfo>();
             var messagesForUser = new List<string>();
-            messagesForUser.Add($"Запуск тестов из класса {classFromDll.Name}");
             GetMethodsWithAttributes(before, after, beforeClass, afterClass, tests, messagesForUser, classFromDll);
             if (tests.Count == 0)
             {
-                return null;
+                return messagesForUser.ToArray();
             }
+            
+            messagesForUser.Add($"Запуск тестов из класса {classFromDll.Name}");
 
             dynamic classInstance = Activator.CreateInstance(classFromDll);
-            foreach (var method in beforeClass)
-            {
-                method.Invoke(null, null);
-            }
-
+            RunMethods(beforeClass, null, messagesForUser);
+            
             foreach (var test in tests)
             {
                 var attribute = (Test)Attribute.GetCustomAttribute(test, typeof(Test));
-                dynamic expected = Activator.CreateInstance(attribute.Expected);
                 if (attribute.Ignore != null)
                 {
                     continue;
                 }
-
-                foreach (var funcBefore in before)
-                {
-                    funcBefore.Invoke(classInstance, null);
-                }
-
-                try
-                {
-                    test.Invoke(classInstance, null);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
+                
+                RunMethods(before, classInstance, messagesForUser);
+                RunTest(test, classInstance, attribute.Expected, messagesForUser);
+                RunMethods(after, classInstance, messagesForUser);
             }
+            
+            RunMethods(afterClass, null, messagesForUser);
 
-            return null;
+            return messagesForUser.ToArray();
         }
     }
 }
