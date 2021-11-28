@@ -1,16 +1,44 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace MyNUnit
 {
     public class MyNUnit
     {
+        public string[] RunTests(string path)
+        {
+            var allDllFiles = Directory.GetFiles(path, "*.dll");
+            var tasks = new Task<string[]>[allDllFiles.Length];
+            for (int i = 0; i < allDllFiles.Length; i++)
+            {
+                var index = i;
+                tasks[i] = Task.Run(() => RunTestsFromDll(allDllFiles[index]));
+            }
+
+            Task.WhenAll(tasks).Wait();
+            var infoAboutTests = new string[1];
+            for (int i = 0; i < tasks.Length; i++)
+            {
+                infoAboutTests.Concat(tasks[i].Result);
+            }
+
+            return infoAboutTests;
+        }
+        
         private string[] RunTestsFromDll(string path)
         {
+            var messages = new string[1];
             var classes = Assembly.LoadFrom(path).ExportedTypes.Where(t => t.IsClass);
-            return null;
+            foreach (var exportCLass in classes)
+            {
+                var infoAboutTests = RunTestsFromClass(exportCLass);
+                messages.Concat(infoAboutTests);
+            }
+            return messages;
         }
 
         private bool MethodHaveIncompatibleAttributes(MethodInfo method)
