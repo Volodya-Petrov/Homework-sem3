@@ -37,14 +37,13 @@ namespace MyNUnit
         {
             var messages = new List<string>();
             var classes = Assembly.LoadFrom(path).ExportedTypes.Where(t => t.IsClass);
-            if (path == "/home/devyatka/programming/Homework-sem3/MyNUnit/TestForMyNUnit/bin/Debug/net5.0" +
-                "/TestForMyNUnit.dll")
+            if (path == "/home/devyatka/programming/Homework-sem3/MyNUnit/TestForMyNUnit/bin/Debug/net5.0/TestForMyNUnit.dll")
             {
                 
             }
-            foreach (var exportCLass in classes)
+            foreach (var exportClass in classes)
             {
-                var infoAboutTests = RunTestsFromClass(exportCLass);
+                var infoAboutTests = RunTestsFromClass(exportClass);
                 messages = messages.Union(infoAboutTests).ToList();
             }
             return messages;
@@ -55,7 +54,7 @@ namespace MyNUnit
             var countOfAttributes = 0;
             foreach (var attribute in method.CustomAttributes)
             {
-                var type = attribute.GetType();
+                var type = attribute.AttributeType;
                 if (type == typeof(Test) || type == typeof(Before) || type == typeof(After) ||
                     type == typeof(BeforeClass) || type == typeof(AfterClass))
                 {
@@ -118,6 +117,10 @@ namespace MyNUnit
         {
             foreach (var methodInfo in classFromDll.GetMethods())
             {
+                if (methodInfo.Name == "TestWithIncompatibleAttributes")
+                {
+                    
+                }
                 if (MethodHaveIncompatibleAttributes(methodInfo))
                 {
                     messages.Add($"Метод {methodInfo.Name} имеет два несовместимых атрибута");
@@ -127,7 +130,7 @@ namespace MyNUnit
             }
         }
 
-        private void RunMethods(List<MethodInfo> methods, dynamic classInstance, List<string> bugsReport)
+        private void RunMethods(List<MethodInfo> methods, object classInstance, List<string> bugsReport)
         {
             foreach (var method in methods)
             {
@@ -137,12 +140,12 @@ namespace MyNUnit
                 }
                 catch (Exception e)
                 {
-                    bugsReport.Add($"В методе {method.Name} возникло исключение: {e.Message}");
+                    bugsReport.Add($"В методе {method.Name} возникло исключение: {e.InnerException.GetType()}");
                 }
             }
         }
 
-        private void RunTest(MethodInfo test, dynamic classInstance, Type expected, List<string> messagesForUser)
+        private void RunTest(MethodInfo test, object classInstance, Type expected, List<string> messagesForUser)
         {
             var message = "";
             try
@@ -153,11 +156,11 @@ namespace MyNUnit
             {
                 if (expected == null)
                 {
-                    message = $"Тест {test.Name} провален: возникло исключение {exception.Message}";
+                    message = $"Тест {test.Name} провален: возникло исключение {exception.InnerException.GetType()}";
                 }
                 else if (exception.InnerException.GetType() != expected)
                 {
-                    message = $"Тест {test.Name} провален: ожидалось исключения типа {expected}, возникло {exception.GetType()} ";
+                    message = $"Тест {test.Name} провален: ожидалось исключения типа {expected}, возникло {exception.InnerException.GetType()} ";
                 }
                 else
                 {
@@ -196,25 +199,34 @@ namespace MyNUnit
             }
             
             messagesForUser.Add($"Запуск тестов из класса {classFromDll.Name}");
-
-            dynamic classInstance = Activator.CreateInstance(classFromDll);
+            
             RunMethods(beforeClass, null, messagesForUser);
-            
-            foreach (var test in tests)
-            {
-                var attribute = (Test)Attribute.GetCustomAttribute(test, typeof(Test));
-                if (attribute.Ignore != null)
+            var tasks = new Task<List<string>>[tests.Count];
+            for (int i = 0; i < tests.Count; i++)
+            {   
+                var test = tests[i];
+                tasks[i] = Task.Run(() =>
                 {
-                    continue;
-                }
-                
-                RunMethods(before, classInstance, messagesForUser);
-                RunTest(test, classInstance, attribute.Expected, messagesForUser);
-                RunMethods(after, classInstance, messagesForUser);
+                    var messagesFromCurrentTest = new List<string>();
+                    var attribute = (Test)Attribute.GetCustomAttribute(test, typeof(Test));
+                    if (attribute.Ignore != null)
+                    {
+                        return messagesFromCurrentTest;
+                    }
+                    object classInstance = Activator.CreateInstance(classFromDll);    
+                    RunMethods(before, classInstance, messagesFromCurrentTest);
+                    RunTest(test, classInstance, attribute.Expected, messagesFromCurrentTest);
+                    RunMethods(after, classInstance, messagesFromCurrentTest);
+                    return messagesFromCurrentTest;
+                });
             }
-            
-            RunMethods(afterClass, null, messagesForUser);
 
+            Task.WhenAll(tasks).Wait();
+            RunMethods(afterClass, null, messagesForUser);
+            foreach (var task in tasks)
+            {
+                messagesForUser = messagesForUser.Union(task.Result).ToList();
+            }
             return messagesForUser;
         }
     }
