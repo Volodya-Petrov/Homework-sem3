@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace MyNUnit
 {
@@ -6,10 +7,13 @@ namespace MyNUnit
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Введите путь до директории с тестами:");
-            var path = Console.ReadLine();
+            if (!Directory.Exists(args[0]))
+            {
+                Console.WriteLine("По указанному пути не существует директории");
+                return;
+            }
             var myNUnit = new MyNUnit();
-            var result = myNUnit.RunTests(path);
+            var result = myNUnit.RunTests(args[0]);
             foreach (var info in result)
             {
                 Console.WriteLine(info);

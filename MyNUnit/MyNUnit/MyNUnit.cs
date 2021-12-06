@@ -6,9 +6,15 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 namespace MyNUnit
-{
+{   
+    /// <summary>
+    /// Класс для запуска тестов
+    /// </summary>
     public class MyNUnit
-    {
+    {   
+        /// <summary>
+        /// Запускает тесты из dll файлов по заданной директории
+        /// </summary>
         public string[] RunTests(string path)
         {
             var allDllFiles = Directory.GetFiles(path, "*.dll");
@@ -18,8 +24,7 @@ namespace MyNUnit
                 var index = i;
                 tasks[i] = Task.Run(() => RunTestsFromDll(allDllFiles[index]));
             }
-
-            Task.WhenAll(tasks).Wait();
+            
             var infoAboutTests = new List<string>();
             for (int i = 0; i < tasks.Length; i++)
             {
@@ -37,10 +42,6 @@ namespace MyNUnit
         {
             var messages = new List<string>();
             var classes = Assembly.LoadFrom(path).ExportedTypes.Where(t => t.IsClass);
-            if (path == "/home/devyatka/programming/Homework-sem3/MyNUnit/TestForMyNUnit/bin/Debug/net5.0/TestForMyNUnit.dll")
-            {
-                
-            }
             foreach (var exportClass in classes)
             {
                 var infoAboutTests = RunTestsFromClass(exportClass);
@@ -160,7 +161,7 @@ namespace MyNUnit
                 }
                 else if (exception.InnerException.GetType() != expected)
                 {
-                    message = $"Тест {test.Name} провален: ожидалось исключения типа {expected}, возникло {exception.InnerException.GetType()} ";
+                    message = $"Тест {test.Name} провален: ожидалось исключения типа {expected}, возникло {exception.InnerException.GetType()}";
                 }
                 else
                 {
@@ -220,8 +221,6 @@ namespace MyNUnit
                     return messagesFromCurrentTest;
                 });
             }
-
-            Task.WhenAll(tasks).Wait();
             RunMethods(afterClass, null, messagesForUser);
             foreach (var task in tasks)
             {

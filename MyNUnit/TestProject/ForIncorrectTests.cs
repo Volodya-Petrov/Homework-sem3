@@ -1,7 +1,7 @@
 using System;
 using MyNUnit;
 
-namespace TestForMyNUnit
+namespace TestProject
 {
     public class ForIncorrectTests
     {

@@ -1,15 +1,11 @@
-using System;
+﻿using System;
 using MyNUnit;
 
-namespace TestForMyNUnit
+namespace TestProject
 {
-    public class ForCorrectTest
+    public class ForCorrectTests
     {
-        private static int counter = 0;
         private int nonStaticCounter = 0;
-        
-        [BeforeClass]
-        public static void Increment() => counter++;
 
         [Before]
         public void NonStaticIncrement() => nonStaticCounter++;
@@ -17,13 +13,13 @@ namespace TestForMyNUnit
         [Test(null)]
         public void TestWithoutExpected()
         {
-            
+
         }
 
         [Test(null, "yes")]
         public void TestShouldBeIgnored()
         {
-            
+
         }
 
         [Test(typeof(ArgumentException))]
@@ -31,15 +27,7 @@ namespace TestForMyNUnit
         {
             throw new ArgumentException();
         }
-        
-        [Test(null)]
-        public void TestBeforeClass()
-        {
-            if (counter != 1)
-            {
-                throw new ArgumentException();
-            }
-        }
+
 
         [Test(null)]
         public void TestBefore()
