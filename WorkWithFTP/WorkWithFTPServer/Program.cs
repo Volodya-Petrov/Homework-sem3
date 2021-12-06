@@ -6,11 +6,9 @@ namespace WorkWithFTP
     class Program
     {
         static void Main(string[] args)
-        {   
-            Console.WriteLine("Введите ip, на котором будет запущен сервер:");
-            var ip = Console.ReadLine();
-            Console.WriteLine("Введите порт сервера:");
-            var port = int.Parse(Console.ReadLine());
+        {
+            string ip = args[0];
+            var port = int.Parse(args[1]);
             try
             {
                 var server = new Server(ip, port);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace WorkWithFTPClient
@@ -8,11 +9,7 @@ namespace WorkWithFTPClient
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Введите IP адресс сервера:");
-            var ip = Console.ReadLine();
-            Console.WriteLine("Введите, к какому порту обращаться:");
-            int.TryParse(Console.ReadLine(), out var port);
-            var client = new Client(ip, port);
+            var client = new Client(args[0], int.Parse(args[1]));
             Console.WriteLine("List:\nФормат запроса:1 <path: String>\npath - путь к директории относительно того места, где запущен сервер");
             Console.WriteLine("Get:\nФормат запроса:2 <path1: String> <path2: String>\npath1 - путь к файлу относительно того места, где запущен сервер\n" +
                               "npath2 - путь к файлу на локальной машине, где запущен клиент");
@@ -24,7 +21,8 @@ namespace WorkWithFTPClient
                 {
                     try
                     {
-                        var response = await client.List(request[1]);
+                        var sourceToken = new CancellationTokenSource();
+                        var response = await client.List(request[1], sourceToken.Token);
                         foreach (var file in response)
                         {
                             Console.WriteLine($"{file.Item1} {file.Item2}");
@@ -42,7 +40,8 @@ namespace WorkWithFTPClient
                     {
                         try
                         {
-                            var response = client.Get(request[1], fstream);
+                            var sourceToken = new CancellationTokenSource();
+                            var response = client.Get(request[1], fstream, sourceToken.Token);
                         }
                         catch (Exception e)
                         {

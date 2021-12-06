@@ -3,6 +3,7 @@ using System.Dynamic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace WorkWithFTPClient
@@ -24,10 +25,10 @@ namespace WorkWithFTPClient
         /// <summary>
         /// Скачивает файл с сервера
         /// </summary>
-        public async Task<long> Get(string path, FileStream destination)
+        public async Task<long> Get(string path, FileStream destination, CancellationToken token)
         { 
             using var client = new TcpClient();
-            await client.ConnectAsync(hostName, port);
+            await client.ConnectAsync(hostName, port, token);
             using var stream = client.GetStream();
             using var writer = new StreamWriter(stream){AutoFlush = true};
             using var reader = new StreamReader(stream);
@@ -51,23 +52,17 @@ namespace WorkWithFTPClient
                 countInString += size[i].ToString();
             }
             var count = long.Parse(countInString);
-            var readByte = new byte[2];
-            for (int i = 0; i < count; i++)
-            {
-                await stream.ReadAsync(readByte, 0, 1);
-                await destination.WriteAsync(readByte, 0, 1);
-            }
-
+            await stream.CopyToAsync(destination, token);
             return count;
         }
         
         /// <summary>
         /// Показывает все папки и файлы, которые лежат на сервере по заданному пути
         /// </summary>
-        public async Task<(string, bool)[]> List(string path)
+        public async Task<(string, bool)[]> List(string path, CancellationToken token)
         {
             using var client = new TcpClient();
-            await client.ConnectAsync(hostName, port);
+            await client.ConnectAsync(hostName, port, token);
             using var stream = client.GetStream();
             using var writer = new StreamWriter(stream){AutoFlush = true};
             using var reader = new StreamReader(stream);

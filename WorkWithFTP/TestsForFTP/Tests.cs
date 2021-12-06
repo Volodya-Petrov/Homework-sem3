@@ -17,26 +17,28 @@ namespace TestsForFTP
         private Client client;
         private Server server;
         private string pathForData = "../../../data/";
+        private CancellationTokenSource tokenSource;
 
         [SetUp]
         public void SetUp()
         {
             server = new Server(ip, port);
             client = new Client(ip, port);
+            tokenSource = new CancellationTokenSource();
         }
         
         [Test]
         public async Task TestShouldThrowExceptionIfListWithIncorrectPath()
         {
             using var handle = server.StartServer();
-            Assert.Throws<AggregateException>(() => client.List("pluuuuug").Wait());
+            Assert.Throws<AggregateException>(() => client.List("pluuuuug", tokenSource.Token).Wait());
         }
         
         [Test]
         public async Task TestShouldThrowExceptionIfGetWithIncorrectPath()
         {
             using var handle = server.StartServer();
-            Assert.Throws<AggregateException>(() => client.Get("pluuuuug", null).Wait());
+            Assert.Throws<AggregateException>(() => client.Get("pluuuuug", null, tokenSource.Token).Wait());
         }
         
         [Test]
@@ -48,7 +50,7 @@ namespace TestsForFTP
                 (pathForData + "plug.txt", false),
                 (pathForData + "WorkWithVK.dll", false),
             };
-            var response = await client.List(pathForData);
+            var response = await client.List(pathForData, tokenSource.Token);
             Assert.AreEqual(result.Length, response.Length);
             for (int i = 0; i < result.Length; i++)
             {
@@ -65,7 +67,7 @@ namespace TestsForFTP
             var result = File.ReadAllBytes(pathForFile);
             using (var fstream = new FileStream(destination, FileMode.OpenOrCreate))
             { 
-                var response = await client.Get(pathForFile, fstream);
+                var response = await client.Get(pathForFile, fstream, tokenSource.Token);
                 Assert.AreEqual(result.Length, response);
             }
 
