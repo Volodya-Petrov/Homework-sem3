@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckSum", "CheckSum\CheckSum.csproj", "{7B8D0E75-C0B6-477E-AEE7-B9BDAAB5F818}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestsForCheckSum", "TestsForCheckSum\TestsForCheckSum.csproj", "{6FA75D0F-12E9-49DB-97F8-3941527F8322}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7B8D0E75-C0B6-477E-AEE7-B9BDAAB5F818}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B8D0E75-C0B6-477E-AEE7-B9BDAAB5F818}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B8D0E75-C0B6-477E-AEE7-B9BDAAB5F818}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B8D0E75-C0B6-477E-AEE7-B9BDAAB5F818}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FA75D0F-12E9-49DB-97F8-3941527F8322}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FA75D0F-12E9-49DB-97F8-3941527F8322}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FA75D0F-12E9-49DB-97F8-3941527F8322}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FA75D0F-12E9-49DB-97F8-3941527F8322}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
