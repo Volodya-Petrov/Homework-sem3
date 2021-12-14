@@ -17,6 +17,11 @@ namespace WorkWithQueue
             public int Value { get; set; }
         }
 
+        public PriorityQueue()
+        {
+            queue = new();
+        }
+        
         /// <summary>
         /// Возвращает размер очереди в какой-то момент времени
         /// </summary>
