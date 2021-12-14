@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using WorkWithQueue;
@@ -73,6 +74,19 @@ namespace TestsForPriorityQueue
             {
                 Assert.IsTrue(result.Contains(i));
             }
+        }
+
+        [Test]
+        public void TestForDequeueWhenZeroElements()
+        {
+            var newQueue = new PriorityQueue();
+            var task = Task.Run(() => newQueue.Dequeue());
+            var task1 = Task.Run(() =>
+            {
+                Thread.Sleep(100);
+                newQueue.Enqueue(5, 5);
+            });
+            Assert.AreEqual(5, task.Result);
         }
     }
 }
