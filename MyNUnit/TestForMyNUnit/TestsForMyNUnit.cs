@@ -7,18 +7,18 @@ namespace TestForMyNUnit
 {
     public class Tests
     {
-        private MyNUnit.MyNUnit myNUnit = new MyNUnit.MyNUnit();
+        private MyNUnit.MyNUnit myNUnit = new ();
     
 
         [TestCaseSource(nameof(MessagesThatShouldBe))]
-        [NUnit.Framework.Test]
+        [Test]
         public void TestForMessagesThatShouldPrintToUser(string message)
         {
             var result = myNUnit.RunTests("../../../../TestProject/bin/Debug/net5.0/");
             Assert.IsTrue(result.Contains(message));
         }
 
-        [NUnit.Framework.Test]
+        [Test]
         public void TestForGeneralState()
         {
             var result = myNUnit.RunTests("../../../../TestProject/bin/Debug/net5.0/");

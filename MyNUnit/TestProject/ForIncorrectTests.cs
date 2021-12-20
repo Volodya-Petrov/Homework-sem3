@@ -1,4 +1,5 @@
 using System;
+using AttributesForMyNUnit;
 using MyNUnit;
 
 namespace TestProject
@@ -34,7 +35,7 @@ namespace TestProject
         {
             throw new AggregateException();
         }
-
+        
         [After]
         [Test(null)]
         public void TestWithIncompatibleAttributes()

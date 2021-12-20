@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using AttributesForMyNUnit;
 
 namespace MyNUnit
 {   
@@ -118,10 +119,6 @@ namespace MyNUnit
         {
             foreach (var methodInfo in classFromDll.GetMethods())
             {
-                if (methodInfo.Name == "TestWithIncompatibleAttributes")
-                {
-                    
-                }
                 if (MethodHaveIncompatibleAttributes(methodInfo))
                 {
                     messages.Add($"Метод {methodInfo.Name} имеет два несовместимых атрибута");
