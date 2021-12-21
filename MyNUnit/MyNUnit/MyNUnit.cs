@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -7,48 +9,28 @@ using System.Threading.Tasks;
 using AttributesForMyNUnit;
 
 namespace MyNUnit
-{   
+{
     /// <summary>
     /// Класс для запуска тестов
     /// </summary>
     public class MyNUnit
     {   
+        private ConcurrentBag<TestInfo> result;
+        
         /// <summary>
         /// Запускает тесты из dll файлов по заданной директории
         /// </summary>
-        public string[] RunTests(string path)
+        public TestInfo[] RunTests(string path)
         {
             var allDllFiles = Directory.GetFiles(path, "*.dll");
-            var tasks = new Task<List<string>>[allDllFiles.Length];
-            for (int i = 0; i < allDllFiles.Length; i++)
-            {
-                var index = i;
-                tasks[i] = Task.Run(() => RunTestsFromDll(allDllFiles[index]));
-            }
-            
-            var infoAboutTests = new List<string>();
-            for (int i = 0; i < tasks.Length; i++)
-            {
-                infoAboutTests = infoAboutTests.Union(tasks[i].Result).ToList();
-            }
-
-            if (infoAboutTests.Count == 0)
-            {
-                return new string[] { "По заданному пути не было найдено тестов" };
-            }
-            return infoAboutTests.ToArray();
+            Parallel.ForEach(allDllFiles, path => RunTestsFromDll(path));
+            return result.ToArray();
         }
         
-        private List<string> RunTestsFromDll(string path)
+        private void RunTestsFromDll(string path)
         {
-            var messages = new List<string>();
             var classes = Assembly.LoadFrom(path).ExportedTypes.Where(t => t.IsClass);
-            foreach (var exportClass in classes)
-            {
-                var infoAboutTests = RunTestsFromClass(exportClass);
-                messages = messages.Union(infoAboutTests).ToList();
-            }
-            return messages;
+            Parallel.ForEach(classes, c => RunTestsFromClass(c));
         }
 
         private bool MethodHaveIncompatibleAttributes(MethodInfo method)
@@ -67,85 +49,134 @@ namespace MyNUnit
             return countOfAttributes > 1;
         }
 
-        private void AddMethodInRightList(List<MethodInfo> before, List<MethodInfo> after,
-            List<MethodInfo> beforeClass, List<MethodInfo> afterClass, List<MethodInfo> tests, List<string> errors, MethodInfo method)
+        private bool MethodHaveReturnTypeOrParametrs(MethodInfo method)
+        {
+            return method.ReturnType.Name != "Void" || method.GetParameters().Length > 0;
+        }
+
+        private void AddMethodInRightList(ListsWithMethods methods, MethodInfo method)
         {
             foreach (var attributes in method.CustomAttributes)
             {
                 var attributeType = attributes.AttributeType;
                 if (attributeType == typeof(Test))
                 {
-                    tests.Add(method);
+                    methods.Tests.Add(method);
                 }
 
                 if (attributeType == typeof(After))
                 {
-                    after.Add(method);
+                    methods.After.Add(method);
                 }
 
                 if (attributeType == typeof(Before))
                 {
-                    before.Add(method);
+                    methods.Before.Add(method);
                 }
 
                 if (attributeType == typeof(BeforeClass))
                 {
-                    if (method.IsStatic)
-                    {
-                        beforeClass.Add(method);
-                    }
-                    else
-                    {
-                        errors.Add($"Метод {method.Name} содержит атрибут BeforeClass, но не является статическим");
-                    }
+                    methods.BeforeClass.Add(method);
                 }
 
                 if (attributeType == typeof(AfterClass))
                 {
-                    if (method.IsStatic)
-                    {
-                        afterClass.Add(method);
-                    }
-                    else
-                    {
-                        errors.Add($"Метод {method.Name} содержит атрибут AfterClass, но не является статическим");
-                    }
+                    methods.AfterClass.Add(method);
                 }
             }
         }
 
-        private void GetMethodsWithAttributes(List<MethodInfo> before, List<MethodInfo> after,
-            List<MethodInfo> beforeClass, List<MethodInfo> afterClass, List<MethodInfo> tests, List<string> messages, Type classFromDll)
+        private void GetMethodsWithAttributes(ListsWithMethods methods, Type classFromDll)
         {
             foreach (var methodInfo in classFromDll.GetMethods())
             {
-                if (MethodHaveIncompatibleAttributes(methodInfo))
-                {
-                    messages.Add($"Метод {methodInfo.Name} имеет два несовместимых атрибута");
-                    continue;
-                }
-                AddMethodInRightList(before, after, beforeClass, afterClass, tests, messages, methodInfo);
+                AddMethodInRightList(methods, methodInfo);
             }
         }
 
-        private void RunMethods(List<MethodInfo> methods, object classInstance, List<string> bugsReport)
+        private bool CheckMethodIsCorrect(MethodInfo method, bool isStatic, out string errorMessage)
+        {
+            if (MethodHaveIncompatibleAttributes(method))
+            {
+                errorMessage = $"Метод {method.Name} имеет несовместимые атрибуты";
+                return false;
+            }
+
+            if (method.IsStatic != isStatic)
+            {
+                errorMessage = isStatic
+                    ? $"Метод {method.Name} должен быть статическим"
+                    : $"Метод {method.Name} не должен быть статическим";
+                return false;
+            }
+
+            if (MethodHaveReturnTypeOrParametrs(method))
+            {
+                errorMessage = $"Метод {method.Name} имеет возвращаемое значение или принимает параметры";
+                return false;
+            }
+
+            errorMessage = null;
+            return true;
+        }
+        
+        private bool RunMethods(List<MethodInfo> methods, object classInstance, bool isStatic, out string errorMessage)
         {
             foreach (var method in methods)
             {
+                if (!CheckMethodIsCorrect(method, isStatic, out errorMessage))
+                {   
+                    return false;
+                }
+
                 try
                 {
                     method.Invoke(classInstance, null);
                 }
                 catch (Exception e)
-                {
-                    bugsReport.Add($"В методе {method.Name} возникло исключение: {e.InnerException.GetType()}");
+                {   
+                    errorMessage = $"В методе {method.Name} возникло исключение: {e.InnerException.GetType()}";
+                    return false;
                 }
             }
+
+            errorMessage = null;
+            return true;
         }
 
-        private void RunTest(MethodInfo test, object classInstance, Type expected, List<string> messagesForUser)
+        private void RunTest(MethodInfo test, object classInstance, List<MethodInfo> before, List<MethodInfo> after)
         {
+            var testInfo = new TestInfo();
+            var attribute = (Test)Attribute.GetCustomAttribute(test, typeof(Test));
+            if (attribute.Ignore != null)
+            {
+                testInfo.State = TestState.Ignored;
+                testInfo.IgnoreMessage = attribute.Ignore;
+                result.Add(testInfo);
+                return;
+            }
+
+            if (!RunMethods(before, classInstance, false, out string errorMessage))
+            {
+                testInfo.State = TestState.Errored;
+                testInfo.ErrorMessage = errorMessage;
+                result.Add(testInfo);
+                return;
+            }
+
+            if (!CheckMethodIsCorrect(test, false, out errorMessage))
+            {
+                testInfo.State = TestState.Failed;
+                testInfo.ErrorMessage = errorMessage;
+                result.Add(testInfo);
+                return;
+            }
+
+            var expected = attribute.Expected;
             var message = "";
+            var state = TestState.Success;
+            var timer = new Stopwatch();
+            timer.Start();
             try
             {
                 test.Invoke(classInstance, null);
@@ -155,14 +186,17 @@ namespace MyNUnit
                 if (expected == null)
                 {
                     message = $"Тест {test.Name} провален: возникло исключение {exception.InnerException.GetType()}";
+                    state = TestState.Failed;
                 }
                 else if (exception.InnerException.GetType() != expected)
                 {
                     message = $"Тест {test.Name} провален: ожидалось исключения типа {expected}, возникло {exception.InnerException.GetType()}";
+                    state = TestState.Failed;
                 }
                 else
                 {
                     message = $"Тест {test.Name} прошел успешно";
+                    state = TestState.Success;
                 }
             }
             finally
@@ -172,58 +206,81 @@ namespace MyNUnit
                     if (expected == null)
                     {
                         message = $"Тест {test.Name} прошел успешно";
+                        state = TestState.Success;
                     }
                     else
                     {
                         message = $"Тест {test.Name} провален: ожидалось исключения типа {expected}";
+                        state = TestState.Failed;
                     }
                 }
             }
-            messagesForUser.Add(message);
-        }
-        
-        private List<string> RunTestsFromClass(Type classFromDll)
-        {
-            var after = new List<MethodInfo>();
-            var before = new List<MethodInfo>();
-            var beforeClass = new List<MethodInfo>();
-            var afterClass = new List<MethodInfo>();
-            var tests = new List<MethodInfo>();
-            var messagesForUser = new List<string>();
-            GetMethodsWithAttributes(before, after, beforeClass, afterClass, tests, messagesForUser, classFromDll);
-            if (tests.Count == 0)
+            timer.Stop();
+            testInfo.State = state;
+            testInfo.ErrorMessage = message;
+            testInfo.Time = timer.ElapsedMilliseconds;
+            if (!RunMethods(after, classInstance, false, out errorMessage))
             {
-                return messagesForUser;
+                testInfo.State = TestState.Errored;
+                testInfo.ErrorMessage = errorMessage;
+                result.Add(testInfo);
+                return;
             }
-            
-            messagesForUser.Add($"Запуск тестов из класса {classFromDll.Name}");
-            
-            RunMethods(beforeClass, null, messagesForUser);
-            var tasks = new Task<List<string>>[tests.Count];
+            result.Add(testInfo);
+        }
+
+        private void MakeAllTestsFromClassErrored(string className, List<MethodInfo> tests, string errorMessage)
+        {
             for (int i = 0; i < tests.Count; i++)
-            {   
-                var test = tests[i];
-                tasks[i] = Task.Run(() =>
+            {
+                result.Add(new TestInfo()
                 {
-                    var messagesFromCurrentTest = new List<string>();
-                    var attribute = (Test)Attribute.GetCustomAttribute(test, typeof(Test));
-                    if (attribute.Ignore != null)
-                    {
-                        return messagesFromCurrentTest;
-                    }
-                    object classInstance = Activator.CreateInstance(classFromDll);    
-                    RunMethods(before, classInstance, messagesFromCurrentTest);
-                    RunTest(test, classInstance, attribute.Expected, messagesFromCurrentTest);
-                    RunMethods(after, classInstance, messagesFromCurrentTest);
-                    return messagesFromCurrentTest;
+                    ErrorMessage = errorMessage,
+                    ClassName = className,
+                    IgnoreMessage = "",
+                    Name = tests[i].Name,
+                    State = TestState.Errored
                 });
             }
-            RunMethods(afterClass, null, messagesForUser);
-            foreach (var task in tasks)
+        }
+        
+        private void RunTestsFromClass(Type classFromDll)
+        {
+            var methods = new ListsWithMethods();
+            var messagesForUser = new List<string>();
+            GetMethodsWithAttributes(methods, classFromDll);
+            if (!RunMethods(methods.BeforeClass, null, true, out string errorMessage))
             {
-                messagesForUser = messagesForUser.Union(task.Result).ToList();
+                MakeAllTestsFromClassErrored(classFromDll.Name, methods.Tests, errorMessage);
+                return;
             }
-            return messagesForUser;
+            Parallel.ForEach(methods.Tests, test =>
+            {
+                object classInstanse = Activator.CreateInstance(classFromDll);
+                RunTest(test, classInstanse, methods.Before, methods.After);
+            });
+            if (!RunMethods(methods.AfterClass, null, true, out errorMessage))
+            {
+                MakeAllTestsFromClassErrored(classFromDll.Name, methods.Tests, errorMessage);
+            }
+        }
+        
+        private class ListsWithMethods
+        {
+            public ListsWithMethods()
+            {
+                After = new();
+                Before = new();
+                BeforeClass = new();
+                AfterClass = new();
+                Tests = new();
+            }
+            
+            public List<MethodInfo> After { get; set; }
+            public List<MethodInfo> Before { get; set; }
+            public List<MethodInfo> BeforeClass { get; set; }
+            public List<MethodInfo> AfterClass { get; set; }
+            public List<MethodInfo> Tests { get; set; }
         }
     }
 }

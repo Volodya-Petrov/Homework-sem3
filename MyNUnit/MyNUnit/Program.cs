@@ -7,6 +7,11 @@ namespace MyNUnit
     {
         static void Main(string[] args)
         {
+            if (args.Length == 0)
+            {
+                Console.WriteLine("Не был передан путь к тестам");
+                return;
+            }
             if (!Directory.Exists(args[0]))
             {
                 Console.WriteLine("По указанному пути не существует директории");
