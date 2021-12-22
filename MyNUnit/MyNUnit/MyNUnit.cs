@@ -21,7 +21,8 @@ namespace MyNUnit
         /// Запускает тесты из dll файлов по заданной директории
         /// </summary>
         public TestInfo[] RunTests(string path)
-        {
+        {   
+            result = new();
             var allDllFiles = Directory.GetFiles(path, "*.dll");
             Parallel.ForEach(allDllFiles, path => RunTestsFromDll(path));
             return result.ToArray();
@@ -32,92 +33,36 @@ namespace MyNUnit
             var classes = Assembly.LoadFrom(path).ExportedTypes.Where(t => t.IsClass);
             Parallel.ForEach(classes, c => RunTestsFromClass(c));
         }
-
-        private bool MethodHaveIncompatibleAttributes(MethodInfo method)
+        
+        private void RunTestsFromClass(Type classFromDll)
         {
-            var countOfAttributes = 0;
-            foreach (var attribute in method.CustomAttributes)
+            var methods = new ListsWithMethods();
+            GetMethodsWithAttributes(methods, classFromDll);
+            if (!RunMethods(methods.BeforeClass, null, true, out string errorMessage))
             {
-                var type = attribute.AttributeType;
-                if (type == typeof(Test) || type == typeof(Before) || type == typeof(After) ||
-                    type == typeof(BeforeClass) || type == typeof(AfterClass))
-                {
-                    countOfAttributes++;
-                }
+                MakeAllTestsFromClassErrored(classFromDll.Name, methods.Tests, errorMessage);
+                return;
             }
 
-            return countOfAttributes > 1;
-        }
-
-        private bool MethodHaveReturnTypeOrParametrs(MethodInfo method)
-        {
-            return method.ReturnType.Name != "Void" || method.GetParameters().Length > 0;
-        }
-
-        private void AddMethodInRightList(ListsWithMethods methods, MethodInfo method)
-        {
-            foreach (var attributes in method.CustomAttributes)
+            var testsResult = new ConcurrentBag<TestInfo>();
+            Parallel.ForEach(methods.Tests, test =>
             {
-                var attributeType = attributes.AttributeType;
-                if (attributeType == typeof(Test))
-                {
-                    methods.Tests.Add(method);
-                }
-
-                if (attributeType == typeof(After))
-                {
-                    methods.After.Add(method);
-                }
-
-                if (attributeType == typeof(Before))
-                {
-                    methods.Before.Add(method);
-                }
-
-                if (attributeType == typeof(BeforeClass))
-                {
-                    methods.BeforeClass.Add(method);
-                }
-
-                if (attributeType == typeof(AfterClass))
-                {
-                    methods.AfterClass.Add(method);
-                }
-            }
-        }
-
-        private void GetMethodsWithAttributes(ListsWithMethods methods, Type classFromDll)
-        {
-            foreach (var methodInfo in classFromDll.GetMethods())
+                object classInstanse = Activator.CreateInstance(classFromDll);
+                var testResult = RunTest(test, classInstanse, methods.Before, methods.After);
+                testResult.Name = test.Name;
+                testResult.ClassName = classFromDll.Name;
+                testsResult.Add(testResult);
+            });
+            if (!RunMethods(methods.AfterClass, null, true, out errorMessage))
             {
-                AddMethodInRightList(methods, methodInfo);
-            }
-        }
-
-        private bool CheckMethodIsCorrect(MethodInfo method, bool isStatic, out string errorMessage)
-        {
-            if (MethodHaveIncompatibleAttributes(method))
-            {
-                errorMessage = $"Метод {method.Name} имеет несовместимые атрибуты";
-                return false;
+                MakeAllTestsFromClassErrored(classFromDll.Name, methods.Tests, errorMessage);
+                return;
             }
 
-            if (method.IsStatic != isStatic)
+            foreach (var testResult in testsResult)
             {
-                errorMessage = isStatic
-                    ? $"Метод {method.Name} должен быть статическим"
-                    : $"Метод {method.Name} не должен быть статическим";
-                return false;
+                result.Add(testResult);
             }
-
-            if (MethodHaveReturnTypeOrParametrs(method))
-            {
-                errorMessage = $"Метод {method.Name} имеет возвращаемое значение или принимает параметры";
-                return false;
-            }
-
-            errorMessage = null;
-            return true;
         }
         
         private bool RunMethods(List<MethodInfo> methods, object classInstance, bool isStatic, out string errorMessage)
@@ -143,8 +88,8 @@ namespace MyNUnit
             errorMessage = null;
             return true;
         }
-
-        private void RunTest(MethodInfo test, object classInstance, List<MethodInfo> before, List<MethodInfo> after)
+        
+        private TestInfo RunTest(MethodInfo test, object classInstance, List<MethodInfo> before, List<MethodInfo> after)
         {
             var testInfo = new TestInfo();
             var attribute = (Test)Attribute.GetCustomAttribute(test, typeof(Test));
@@ -152,24 +97,21 @@ namespace MyNUnit
             {
                 testInfo.State = TestState.Ignored;
                 testInfo.IgnoreMessage = attribute.Ignore;
-                result.Add(testInfo);
-                return;
+                return testInfo;
             }
 
             if (!RunMethods(before, classInstance, false, out string errorMessage))
             {
                 testInfo.State = TestState.Errored;
                 testInfo.ErrorMessage = errorMessage;
-                result.Add(testInfo);
-                return;
+                return testInfo;
             }
 
             if (!CheckMethodIsCorrect(test, false, out errorMessage))
             {
                 testInfo.State = TestState.Failed;
                 testInfo.ErrorMessage = errorMessage;
-                result.Add(testInfo);
-                return;
+                return testInfo;
             }
 
             var expected = attribute.Expected;
@@ -223,12 +165,98 @@ namespace MyNUnit
             {
                 testInfo.State = TestState.Errored;
                 testInfo.ErrorMessage = errorMessage;
-                result.Add(testInfo);
-                return;
+                return testInfo;
             }
-            result.Add(testInfo);
+            return testInfo;
+        }
+        
+        private void GetMethodsWithAttributes(ListsWithMethods methods, Type classFromDll)
+        {
+            foreach (var methodInfo in classFromDll.GetMethods())
+            {
+                AddMethodInRightList(methods, methodInfo);
+            }
+        }
+        
+        private bool MethodHaveIncompatibleAttributes(MethodInfo method)
+        {
+            var countOfAttributes = 0;
+            foreach (var attribute in method.CustomAttributes)
+            {
+                var type = attribute.AttributeType;
+                if (type == typeof(Test) || type == typeof(Before) || type == typeof(After) ||
+                    type == typeof(BeforeClass) || type == typeof(AfterClass))
+                {
+                    countOfAttributes++;
+                }
+            }
+
+            return countOfAttributes > 1;
         }
 
+        private bool MethodHaveReturnTypeOrParametrs(MethodInfo method)
+        {
+            return method.ReturnType.Name != "Void" || method.GetParameters().Length > 0;
+        }
+
+        private void AddMethodInRightList(ListsWithMethods methods, MethodInfo method)
+        {
+            foreach (var attributes in method.CustomAttributes)
+            {
+                var attributeType = attributes.AttributeType;
+                if (attributeType == typeof(Test))
+                {
+                    methods.Tests.Add(method);
+                }
+
+                if (attributeType == typeof(After))
+                {
+                    methods.After.Add(method);
+                }
+
+                if (attributeType == typeof(Before))
+                {
+                    methods.Before.Add(method);
+                }
+
+                if (attributeType == typeof(BeforeClass))
+                {
+                    methods.BeforeClass.Add(method);
+                }
+
+                if (attributeType == typeof(AfterClass))
+                {
+                    methods.AfterClass.Add(method);
+                }
+            }
+        }
+        
+        private bool CheckMethodIsCorrect(MethodInfo method, bool isStatic, out string errorMessage)
+        {
+            if (MethodHaveIncompatibleAttributes(method))
+            {
+                errorMessage = $"Метод {method.Name} имеет несовместимые атрибуты";
+                return false;
+            }
+
+            if (method.IsStatic != isStatic)
+            {
+                errorMessage = isStatic
+                    ? $"Метод {method.Name} должен быть статическим"
+                    : $"Метод {method.Name} не должен быть статическим";
+                return false;
+            }
+
+            if (MethodHaveReturnTypeOrParametrs(method))
+            {
+                errorMessage = $"Метод {method.Name} имеет возвращаемое значение или принимает параметры";
+                return false;
+            }
+
+            errorMessage = null;
+            return true;
+        }
+        
         private void MakeAllTestsFromClassErrored(string className, List<MethodInfo> tests, string errorMessage)
         {
             for (int i = 0; i < tests.Count; i++)
@@ -241,27 +269,6 @@ namespace MyNUnit
                     Name = tests[i].Name,
                     State = TestState.Errored
                 });
-            }
-        }
-        
-        private void RunTestsFromClass(Type classFromDll)
-        {
-            var methods = new ListsWithMethods();
-            var messagesForUser = new List<string>();
-            GetMethodsWithAttributes(methods, classFromDll);
-            if (!RunMethods(methods.BeforeClass, null, true, out string errorMessage))
-            {
-                MakeAllTestsFromClassErrored(classFromDll.Name, methods.Tests, errorMessage);
-                return;
-            }
-            Parallel.ForEach(methods.Tests, test =>
-            {
-                object classInstanse = Activator.CreateInstance(classFromDll);
-                RunTest(test, classInstanse, methods.Before, methods.After);
-            });
-            if (!RunMethods(methods.AfterClass, null, true, out errorMessage))
-            {
-                MakeAllTestsFromClassErrored(classFromDll.Name, methods.Tests, errorMessage);
             }
         }
         
