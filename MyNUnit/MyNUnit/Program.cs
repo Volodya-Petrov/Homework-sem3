@@ -7,15 +7,19 @@ namespace MyNUnit
     {
         static void Main(string[] args)
         {
-            /*if (args.Length == 0)
+            if (args.Length == 0)
             {
                 Console.WriteLine("Не был передан путь к тестам");
                 return;
-            }*/
-            Console.WriteLine("Введите путь");
-            var path = Console.ReadLine();
+            }
+
+            if (!Directory.Exists(args[0]))
+            {
+                Console.WriteLine("По заданному пути не обнаружено директории");
+                return;
+            }
             var myNUnit = new MyNUnit();
-            var result = myNUnit.RunTests(path);
+            var result = myNUnit.RunTests(args[0]);
             foreach (var info in result)
             {
                 switch (info.State)
