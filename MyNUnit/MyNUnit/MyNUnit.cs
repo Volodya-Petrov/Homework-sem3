@@ -109,7 +109,7 @@ namespace MyNUnit
 
             if (!CheckMethodIsCorrect(test, false, out errorMessage))
             {
-                testInfo.State = TestState.Failed;
+                testInfo.State = TestState.Errored;
                 testInfo.ErrorMessage = errorMessage;
                 return testInfo;
             }
@@ -127,12 +127,12 @@ namespace MyNUnit
             {
                 if (expected == null)
                 {
-                    message = $"Тест {test.Name} провален: возникло исключение {exception.InnerException.GetType()}";
+                    message = $"возникло исключение {exception.InnerException.GetType()}";
                     state = TestState.Failed;
                 }
                 else if (exception.InnerException.GetType() != expected)
                 {
-                    message = $"Тест {test.Name} провален: ожидалось исключения типа {expected}, возникло {exception.InnerException.GetType()}";
+                    message = $"ожидалось исключения типа {expected}, возникло {exception.InnerException.GetType()}";
                     state = TestState.Failed;
                 }
                 else
@@ -152,7 +152,7 @@ namespace MyNUnit
                     }
                     else
                     {
-                        message = $"Тест {test.Name} провален: ожидалось исключения типа {expected}";
+                        message = $"ожидалось исключения типа {expected}";
                         state = TestState.Failed;
                     }
                 }

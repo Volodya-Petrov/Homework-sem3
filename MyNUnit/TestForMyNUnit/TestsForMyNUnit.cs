@@ -12,10 +12,10 @@ namespace TestForMyNUnit
 
         [TestCaseSource(nameof(MessagesThatShouldBe))]
         [Test]
-        public void TestForMessagesThatShouldPrintToUser(string message)
+        public void TestForMessagesThatShouldPrintToUser(TestInfo testInfo)
         {
             var result = myNUnit.RunTests("../../../../TestProject/bin/Debug/net5.0/");
-          //  Assert.IsTrue(result.Contains(message));
+            Assert.IsTrue(result.FirstOrDefault(ti => ti.Name == testInfo.Name && ti.ClassName == testInfo.ClassName && ti.State == testInfo.State) != null);
         }
 
         [Test]
@@ -24,22 +24,33 @@ namespace TestForMyNUnit
             var result = myNUnit.RunTests("../../../../TestProject/bin/Debug/net5.0/");
             Assert.AreEqual(11, result.Length);
         }
-        
-        private static IEnumerable<string> MessagesThatShouldBe()
+
+        private static IEnumerable<TestInfo> MessagesThatShouldBe()
         {
-            yield return "Тест TestWithoutExpected прошел успешно";
-            yield return "Тест TestWithExpectedException прошел успешно";
-            yield return "Тест TestBefore прошел успешно";
-            yield return "Метод NonStaticBeforeClass содержит атрибут BeforeClass, но не является статическим";
-            yield return
-                "Тест ExceptionExpectedButWasNull провален: ожидалось исключения типа System.ArgumentException";
-            yield return
-                "Тест OneExceptionExpectedButWasAnother провален: ожидалось исключения типа System.ArgumentException, возникло System.AggregateException";
-            yield return "Тест NullExpectedButThrowException провален: возникло исключение System.ArgumentException";
-            yield return "Метод TestWithIncompatibleAttributes имеет два несовместимых атрибута";
-            yield return "В методе ExceptionInAfterClass возникло исключение: System.AggregateException";
-            yield return "Запуск тестов из класса ForCorrectTests";
-            yield return "Запуск тестов из класса ForIncorrectTests";
+            yield return new TestInfo()
+                {ClassName = "ForCorrectTests", Name = "TestShouldBeIgnored", State = TestState.Ignored};
+            var nameOfTestsFromCorrectTests = new string[]
+            {
+                "TestWithoutExpected", "TestWithExpectedException", "TestBefore"
+            };
+            foreach (var testName in nameOfTestsFromCorrectTests)
+            {
+                yield return new TestInfo() {ClassName = "ForCorrectTests", Name = testName, State = TestState.Success};
+            }
+
+            var nameOfTestsThatShouldBeFailed = new string[]
+            {
+                "NullExpectedButThrowException", "ExceptionExpectedButWasNull", "OneExceptionExpectedButWasAnother"
+            };
+            foreach (var testName in nameOfTestsThatShouldBeFailed)
+            {
+                yield return new TestInfo()
+                    {ClassName = "ForIncorrectTests", Name = testName, State = TestState.Failed};
+            }
+            yield return new TestInfo() {ClassName = "ForIncorrectTests", Name = "StaticTest", State = TestState.Errored};
+            yield return new TestInfo() {ClassName = "ForIncorrectTests", Name = "TestWithReturnValue", State = TestState.Errored};
+            yield return new TestInfo() {ClassName = "ForIncorrectTests", Name = "TestWithParameters", State = TestState.Errored};
+            yield return new TestInfo() {ClassName = "ForIncorrectTestsWithBeforeClass", Name = "Test", State = TestState.Errored};
         }
     }
 }

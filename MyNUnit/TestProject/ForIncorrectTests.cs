@@ -24,21 +24,20 @@ namespace TestProject
             throw new AggregateException();
         }
 
-        [BeforeClass]
-        public void NonStaticBeforeClass()
+        [Test(null)]
+        public static void StaticTest()
         {
             
         }
 
-        [AfterClass]
-        public static void ExceptionInAfterClass()
-        {
-            throw new AggregateException();
-        }
-        
-        [After]
         [Test(null)]
-        public void TestWithIncompatibleAttributes()
+        public int TestWithReturnValue()
+        {
+            return 1;
+        }
+
+        [Test(null)]
+        public void TestWithParameters(int a)
         {
             
         }

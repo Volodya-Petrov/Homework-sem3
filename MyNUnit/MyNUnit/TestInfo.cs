@@ -1,7 +1,10 @@
 using System;
 
 namespace MyNUnit
-{
+{   
+    /// <summary>
+    /// Класс с информацией о результате выполнения теста
+    /// </summary>
     public class TestInfo
     {
 
