@@ -152,7 +152,7 @@ namespace MyNUnit
                     }
                     else
                     {
-                        message = $"ожидалось исключения типа {expected}";
+                        message = $"ожидалось исключение типа {expected}";
                         state = TestState.Failed;
                     }
                 }
